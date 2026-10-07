@@ -17,10 +17,12 @@ Comprehensive technical, clinical, and operational documentation is available in
 
 | Document | Description |
 | :--- | :--- |
+| **[Clinical Informaticist & User Guide](file:///c:/Coding/Healthcare/docs/USER_GUIDE.md)** | Complete end-to-end platform guide: UI walkthrough, HITL deck, Mapping Memory, Clinical NLP, validation, and FHIR export |
 | **[System Architecture & Design](file:///c:/Coding/Healthcare/docs/ARCHITECTURE.md)** | Subsystem blueprints, zero-trust token vault, AST parser grammar, and grounded terminology models |
 | **[REST API Specification](file:///c:/Coding/Healthcare/docs/API_REFERENCE.md)** | Complete endpoint contracts, request/response models, cURL examples, batch processing, and push gateway |
 | **[Clinical Scenarios & Informatics Guide](file:///c:/Coding/Healthcare/docs/CLINICAL_SCENARIOS.md)** | Deep dive into the 5 clinical scenarios (ADT admission, CMP/CBC labs, messy vitals, PACS radiology, cardiology) |
 | **[DevOps & Deployment Runbook](file:///c:/Coding/Healthcare/docs/DEPLOYMENT_GUIDE.md)** | Bare-metal, Docker Compose, Render, Vercel, GCP Cloud Run, and AWS HealthLake deployment instructions |
+
 
 ---
 
