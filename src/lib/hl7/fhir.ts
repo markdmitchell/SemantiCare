@@ -12,7 +12,7 @@ export interface Bundle {
   resourceType: "Bundle";
   id: string;
   type: "transaction";
-  timestamp?: string;
+  timestamp?: string | undefined;
   entry: BundleEntry[];
 }
 
@@ -157,7 +157,7 @@ export function buildBundle(msg: HL7Message, g: GroundingResult): Bundle {
       subject,
       participant: attending ? [{ individual: attending }] : undefined,
       period: { start: hl7DateTime(get(pv1, 44) || get(findSeg(msg, "EVN"), 2)), end: hl7DateTime(get(pv1, 45)) },
-      location: get(pv1, 3) ? [{ location: { display: reps(pv1, 3)[0].map((x) => x[0]).filter(Boolean).join(" / ") } }] : undefined,
+      location: get(pv1, 3) ? [{ location: { display: (reps(pv1, 3)[0] ?? []).map((x) => x[0]).filter(Boolean).join(" / ") } }] : undefined,
     });
   }
   const encounter = encounterRef ? { reference: encounterRef } : undefined;
@@ -190,7 +190,7 @@ export function buildBundle(msg: HL7Message, g: GroundingResult): Bundle {
           interpretation: INTERP[o.flag]
             ? [{ coding: [{ system: "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", code: INTERP[o.flag] }] }]
             : undefined,
-          referenceRange: o.refRange ? [rr ? { low: q(rr[1]), high: q(rr[2]) } : { text: o.refRange }] : undefined,
+          referenceRange: o.refRange ? [rr ? { low: q(rr[1]!), high: q(rr[2]!) } : { text: o.refRange }] : undefined,
         }),
       });
     }

@@ -46,16 +46,17 @@ export function parseHL7(raw: string): HL7Message {
   if (!lines.length) {
     return { segments: [], enc, type: "", trigger: "", controlId: "", version: "", errors: ["Empty message"], warnings };
   }
-  if (!lines[0].startsWith("MSH")) errors.push("First segment must be MSH");
+  const first = lines[0]!;
+  if (!first.startsWith("MSH")) errors.push("First segment must be MSH");
   else {
-    const f = lines[0][3] ?? "|";
-    const end = lines[0].indexOf(f, 4);
-    const e = lines[0].slice(4, end === -1 ? undefined : end);
+    const f = first[3] ?? "|";
+    const end = first.indexOf(f, 4);
+    const e = first.slice(4, end === -1 ? undefined : end);
     enc = { field: f, comp: e[0] ?? "^", rep: e[1] ?? "~", esc: e[2] ?? "\\", sub: e[3] ?? "&" };
   }
   const segments: Segment[] = lines.map((line, i) => {
     const parts = line.split(enc.field);
-    const name = parts[0];
+    const name = parts[0] ?? "";
     if (!/^[A-Z][A-Z0-9]{2}$/.test(name)) errors.push(`Line ${i + 1}: invalid segment id "${name}"`);
     const fields: FieldValue[] = [[]];
     if (name === "MSH") {

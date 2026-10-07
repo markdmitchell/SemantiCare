@@ -46,8 +46,8 @@ export function ParseTree({ msg }: { msg: HL7Message }) {
                         {f.map((rep, ri) => (
                           <div key={ri} className="flex flex-wrap items-center gap-1">
                             {f.length > 1 && <span className="chip chip-info">~{ri + 1}</span>}
-                            {rep.length === 1 && rep[0].length === 1 ? (
-                              <span className="code break-all">{rep[0][0]}</span>
+                            {rep.length === 1 && rep[0]?.length === 1 ? (
+                              <span className="code break-all">{rep[0]?.[0]}</span>
                             ) : (
                               rep.map((c, ci) =>
                                 c.join("") ? (
