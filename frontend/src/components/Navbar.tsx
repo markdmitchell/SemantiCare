@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  HeartPulse, BookOpen, Layers, Sparkles, AlertTriangle, FileCheck, Download, Database, GitBranch,
+  BookOpen, Layers, Sparkles, AlertTriangle, FileCheck, Download, Database, GitBranch,
   FileText, FlaskConical,
 } from 'lucide-react';
 import type { HL7Sample } from '../types/hl7';
@@ -56,9 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Row 1 */}
       <div className="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center shadow-sm">
-            <HeartPulse className="w-5 h-5 text-white" />
-          </div>
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="w-9 h-9 shrink-0 shadow-sm rounded-xl" />
           <div className="min-w-0">
             <div className="font-semibold text-slate-900 tracking-tight leading-tight">SemantiCare</div>
             <div className="text-[11px] text-slate-500 truncate">HL7 v2 → FHIR R4 clinical bridge</div>
