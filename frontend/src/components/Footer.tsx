@@ -30,9 +30,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Brand & Mission */}
           <div className="space-y-1.5 max-w-md">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-sky-600 via-amber-600 to-emerald-600 flex items-center justify-center text-white shadow-sm">
-                <Activity className="w-3.5 h-3.5" />
-              </div>
+              <img src="/favicon.svg" alt="" aria-hidden="true" className="w-6 h-6 shrink-0 rounded-lg shadow-sm" />
               <span className="font-bold text-slate-900 text-sm tracking-tight">SemantiCare</span>
               <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
                 v1.1 Active
