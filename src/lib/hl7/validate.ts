@@ -20,7 +20,7 @@ export function validateBundle(b: Bundle): Issue[] {
   const urls = new Set(b.entry.map((e) => e.fullUrl));
 
   for (const e of b.entry) {
-    const r = e.resource;
+    const r = e.resource as any;
     const label = `${r.resourceType}/${r.id?.slice(0, 8)}`;
     const push = (severity: Severity, path: string, message: string, rule: string) =>
       issues.push({ severity, resource: label, path: `${r.resourceType}.${path}`, message, rule });
