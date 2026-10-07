@@ -76,19 +76,19 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ onClose }) => 
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-950 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
-            <Cpu className="w-5 h-5 text-cyan-400" />
+            <Cpu className="w-5 h-5 text-sky-600" />
             <div>
-              <h3 className="font-bold text-slate-100 text-base">System Architecture & Roadmap</h3>
-              <p className="text-xs text-slate-400">AI-Assisted HL7 v2 to FHIR R4 Semantic Data Mapper</p>
+              <h3 className="font-bold text-slate-800 text-base">System Architecture & Roadmap</h3>
+              <p className="text-xs text-slate-500">AI-Assisted HL7 v2 to FHIR R4 Semantic Data Mapper</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -97,19 +97,19 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ onClose }) => 
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto text-xs">
           {/* Architectural Pattern Note */}
-          <div className="bg-gradient-to-r from-cyan-950/60 to-emerald-950/60 border border-cyan-800/60 rounded-xl p-4 space-y-2">
-            <h4 className="font-semibold text-cyan-200 text-sm flex items-center gap-2">
-              <GitBranch className="w-4 h-4 text-emerald-400" />
+          <div className="bg-gradient-to-r from-sky-100/60 to-emerald-100/60 border border-sky-200/60 rounded-xl p-4 space-y-2">
+            <h4 className="font-semibold text-sky-700 text-sm flex items-center gap-2">
+              <GitBranch className="w-4 h-4 text-emerald-600" />
               The "Hybrid Rules-First + AI-Gap-Fill" Pattern
             </h4>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-slate-600 leading-relaxed">
               Standard HL7 fields (timestamps, patient identifiers, names) are parsed deterministically at microsecond speed with 100% precision. The semantic engine is then targeted specifically where traditional parsers fail: <strong>local non-standard lab codes, ambiguous clinical units, unstructured clinical notes, and proprietary hospital Z-segments</strong>.
             </p>
           </div>
 
           {/* Phased Roadmap Timeline */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
+            <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px]">
               Development Phases
             </h4>
 
@@ -123,22 +123,22 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ onClose }) => 
                     key={p.phase}
                     className={`rounded-lg p-3.5 border transition ${
                       isCompleted
-                        ? 'bg-slate-950/80 border-cyan-900/60'
+                        ? 'bg-slate-50/80 border-sky-200/60'
                         : isNext
-                        ? 'bg-slate-900 border-amber-600/40'
-                        : 'bg-slate-950/40 border-slate-800/80'
+                        ? 'bg-white border-amber-600/40'
+                        : 'bg-slate-50/40 border-slate-200/80'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
                         {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         ) : isNext ? (
                           <div className="w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
                         ) : (
                           <Circle className="w-4 h-4 text-slate-600" />
                         )}
-                        <span className="font-semibold text-slate-200 text-xs">
+                        <span className="font-semibold text-slate-700 text-xs">
                           Phase {p.phase}: {p.title}
                         </span>
                       </div>
@@ -146,22 +146,22 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ onClose }) => 
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                           isCompleted
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : isNext
-                            ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                            : 'bg-slate-800 text-slate-500'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-slate-100 text-slate-500'
                         }`}
                       >
                         {isCompleted ? 'Built & Live' : isNext ? 'Ready for Build' : 'Planned'}
                       </span>
                     </div>
 
-                    <p className="text-slate-400 text-[11px] mb-2">{p.summary}</p>
+                    <p className="text-slate-500 text-[11px] mb-2">{p.summary}</p>
 
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-400 pt-1">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-500 pt-1">
                       {p.details.map((d, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-cyan-500">•</span>
+                          <span className="text-sky-500">•</span>
                           <span>{d}</span>
                         </li>
                       ))}
@@ -174,10 +174,10 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ onClose }) => 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium transition"
+            className="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium transition"
           >
             Got it
           </button>

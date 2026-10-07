@@ -287,7 +287,7 @@ export const App: React.FC = () => {
   const unresolvedAmbiguities = mappingResult?.ambiguities.filter((a) => !a.is_resolved) || [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-900 selection:text-cyan-100">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-800">
       {/* Top Navigation */}
       <Navbar
         backendOnline={backendOnline}
@@ -316,14 +316,14 @@ export const App: React.FC = () => {
 
       {/* Error Alert Banner if any */}
       {errorMessage && (
-        <div className="bg-rose-950/90 border-b border-rose-800 text-rose-200 px-5 py-2.5 text-xs flex items-center justify-between">
+        <div className="bg-rose-50/90 border-b border-rose-200 text-rose-700 px-5 py-2.5 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2 max-w-5xl mx-auto w-full">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{errorMessage}</span>
           </div>
           <button
             onClick={() => executePipeline(rawHL7)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-rose-900 hover:bg-rose-800 text-white text-[11px] font-medium"
+            className="flex items-center gap-1 px-2 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-slate-900 text-[11px] font-medium"
           >
             <RefreshCw className="w-3 h-3" />
             Retry
@@ -387,7 +387,7 @@ export const App: React.FC = () => {
               onDirectJsonEdit={handleDirectJsonEdit}
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-slate-900 border border-slate-800 rounded-xl text-slate-500 text-xs">
+            <div className="flex items-center justify-center h-full bg-white border border-slate-200 rounded-xl text-slate-500 text-xs">
               Click "Map to FHIR R4" to initiate semantic mapping.
             </div>
           )}

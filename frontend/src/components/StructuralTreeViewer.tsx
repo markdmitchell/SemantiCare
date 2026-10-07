@@ -76,31 +76,31 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
   // Color mapping based on HL7 segment domain
   const getSegmentBadgeStyle = (segId: string, isCustom: boolean) => {
     if (isCustom || segId.startsWith('Z')) {
-      return 'bg-rose-950/80 text-rose-300 border-rose-800';
+      return 'bg-rose-50/80 text-rose-700 border-rose-200';
     }
     switch (segId) {
       case 'MSH':
       case 'EVN':
-        return 'bg-blue-950/80 text-blue-300 border-blue-800';
+        return 'bg-blue-50/80 text-blue-700 border-blue-200';
       case 'PID':
       case 'NK1':
-        return 'bg-purple-950/80 text-purple-300 border-purple-800';
+        return 'bg-purple-50/80 text-purple-700 border-purple-200';
       case 'PV1':
-        return 'bg-indigo-950/80 text-indigo-300 border-indigo-800';
+        return 'bg-indigo-50/80 text-indigo-700 border-indigo-200';
       case 'ORC':
       case 'OBR':
-        return 'bg-cyan-950/80 text-cyan-300 border-cyan-800';
+        return 'bg-sky-50/80 text-sky-700 border-sky-200';
       case 'OBX':
-        return 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
+        return 'bg-emerald-50/80 text-emerald-700 border-emerald-200';
       case 'NTE':
-        return 'bg-amber-950/80 text-amber-300 border-amber-800';
+        return 'bg-amber-50/80 text-amber-700 border-amber-200';
       case 'DG1':
       case 'AL1':
-        return 'bg-orange-950/80 text-orange-300 border-orange-800';
+        return 'bg-orange-50/80 text-orange-700 border-orange-200';
       case 'IN1':
-        return 'bg-teal-950/80 text-teal-300 border-teal-800';
+        return 'bg-teal-50/80 text-teal-700 border-teal-200';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-slate-100 text-slate-600 border-slate-200';
     }
   };
 
@@ -129,25 +129,25 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
       {/* Top Header & View Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5 bg-slate-950/70 border-b border-slate-800 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5 bg-slate-50/70 border-b border-slate-200 gap-2">
         <div className="flex items-center gap-2">
-          <FolderTree className="w-4 h-4 text-cyan-400" />
-          <h2 className="font-semibold text-sm text-slate-200">Structural Parse Tree</h2>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">
+          <FolderTree className="w-4 h-4 text-sky-600" />
+          <h2 className="font-semibold text-sm text-slate-700">Structural Parse Tree</h2>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 font-mono">
             {filteredSegments.length} of {segments.length} segments
           </span>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200 self-start sm:self-auto">
           <button
             onClick={() => setActiveTab('tree')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition ${
               activeTab === 'tree'
-                ? 'bg-cyan-950 text-cyan-200 border border-cyan-800 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <FolderTree className="w-3.5 h-3.5" />
@@ -157,8 +157,8 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
             onClick={() => setActiveTab('table')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition ${
               activeTab === 'table'
-                ? 'bg-cyan-950 text-cyan-200 border border-cyan-800 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <Table className="w-3.5 h-3.5" />
@@ -168,8 +168,8 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
             onClick={() => setActiveTab('json')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition ${
               activeTab === 'json'
-                ? 'bg-cyan-950 text-cyan-200 border border-cyan-800 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3 bg-slate-950/40 border-b border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="p-3 bg-slate-50/40 border-b border-slate-200/80 flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full md:w-72">
           <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -187,7 +187,7 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search fields, codes, or values..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/50"
           />
         </div>
 
@@ -197,8 +197,8 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
             onClick={() => setFilterSegment('ALL')}
             className={`text-[11px] px-2 py-1 rounded border transition whitespace-nowrap ${
               filterSegment === 'ALL'
-                ? 'bg-cyan-950 border-cyan-600 text-cyan-200'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-50 border-sky-600 text-sky-700'
+                : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
             }`}
           >
             All Segments ({segments.length})
@@ -212,10 +212,10 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                 onClick={() => setFilterSegment(type)}
                 className={`text-[11px] px-2 py-1 rounded border font-mono transition whitespace-nowrap ${
                   filterSegment === type
-                    ? 'bg-cyan-950 border-cyan-600 text-cyan-200'
+                    ? 'bg-sky-50 border-sky-600 text-sky-700'
                     : isCustom
-                    ? 'bg-rose-950/30 border-rose-900/50 text-rose-300 hover:bg-rose-900/40'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-rose-50/30 border-rose-200/50 text-rose-700 hover:bg-rose-100/40'
+                    : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {type} {count > 1 ? `(${count})` : ''}
@@ -228,14 +228,14 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
           <div className="hidden lg:flex items-center gap-2 text-xs">
             <button
               onClick={expandAll}
-              className="text-slate-400 hover:text-slate-200 underline text-[11px]"
+              className="text-slate-500 hover:text-slate-700 underline text-[11px]"
             >
               Expand All
             </button>
             <span className="text-slate-700">•</span>
             <button
               onClick={collapseAll}
-              className="text-slate-400 hover:text-slate-200 underline text-[11px]"
+              className="text-slate-500 hover:text-slate-700 underline text-[11px]"
             >
               Collapse All
             </button>
@@ -244,11 +244,11 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-slate-950/60">
+      <div className="flex-1 overflow-y-auto p-4 bg-slate-50/60">
         {segments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
             <Layers className="w-12 h-12 text-slate-700 mb-3" />
-            <p className="font-medium text-slate-400">No message parsed yet</p>
+            <p className="font-medium text-slate-500">No message parsed yet</p>
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
               Paste an HL7 v2 message on the left or click a clinical scenario above to see the structural breakdown.
             </p>
@@ -269,17 +269,17 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                 return (
                   <div
                     key={seg.unique_id}
-                    className="border border-slate-800 rounded-lg bg-slate-900/80 overflow-hidden shadow-sm hover:border-slate-700 transition"
+                    className="border border-slate-200 rounded-lg bg-white/80 overflow-hidden shadow-sm hover:border-slate-200 transition"
                   >
                     {/* Segment Header */}
                     <div
                       onClick={() => toggleSegment(seg.unique_id)}
-                      className="flex items-center justify-between p-3 bg-slate-900 hover:bg-slate-850 cursor-pointer select-none border-b border-slate-800/80"
+                      className="flex items-center justify-between p-3 bg-white hover:bg-slate-850 cursor-pointer select-none border-b border-slate-200/80"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="text-slate-400">
+                        <div className="text-slate-500">
                           {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-cyan-400" />
+                            <ChevronDown className="w-4 h-4 text-sky-600" />
                           ) : (
                             <ChevronRight className="w-4 h-4" />
                           )}
@@ -293,21 +293,21 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
 
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-slate-200">
+                            <span className="text-xs font-semibold text-slate-700">
                               {seg.title}
                             </span>
                             {seg.is_custom && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950 text-rose-300 border border-rose-800 font-semibold">
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 font-semibold">
                                 Proprietary Z-Segment
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 line-clamp-1">{seg.description}</p>
+                          <p className="text-[11px] text-slate-500 line-clamp-1">{seg.description}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200">
                           {populatedFields.length} populated fields
                         </span>
                       </div>
@@ -315,9 +315,9 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
 
                     {/* Segment Body: Fields Tree */}
                     {isExpanded && (
-                      <div className="p-3 bg-slate-950/70 divide-y divide-slate-850">
+                      <div className="p-3 bg-slate-50/70 divide-y divide-slate-850">
                         {/* Raw Segment Text Bar */}
-                        <div className="pb-2.5 mb-2.5 text-[11px] font-mono text-slate-400 break-all bg-slate-900/60 p-2 rounded border border-slate-850">
+                        <div className="pb-2.5 mb-2.5 text-[11px] font-mono text-slate-500 break-all bg-white/60 p-2 rounded border border-slate-850">
                           <span className="text-slate-500 select-none mr-2 font-semibold">RAW:</span>
                           {seg.raw}
                         </div>
@@ -334,17 +334,17 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                             return (
                               <div
                                 key={field.field_index}
-                                className="bg-slate-900/90 rounded border border-slate-800/80 p-2.5 hover:border-slate-700 transition"
+                                className="bg-white/90 rounded border border-slate-200/80 p-2.5 hover:border-slate-200 transition"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                                   <div className="flex items-center gap-2">
                                     {hasComponents ? (
                                       <button
                                         onClick={() => toggleField(fieldUid)}
-                                        className="text-slate-400 hover:text-cyan-400"
+                                        className="text-slate-500 hover:text-sky-600"
                                       >
                                         {isFieldExpanded ? (
-                                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400" />
+                                          <ChevronDown className="w-3.5 h-3.5 text-sky-600" />
                                         ) : (
                                           <ChevronRight className="w-3.5 h-3.5" />
                                         )}
@@ -353,28 +353,28 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                                       <div className="w-3.5" />
                                     )}
 
-                                    <span className="font-mono text-xs font-semibold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">
+                                    <span className="font-mono text-xs font-semibold text-sky-600 bg-sky-50/60 px-1.5 py-0.5 rounded border border-sky-200">
                                       {seg.segment_id}-{field.field_index}
                                     </span>
 
-                                    <span className="text-xs font-medium text-slate-200">
+                                    <span className="text-xs font-medium text-slate-700">
                                       {field.name}
                                     </span>
 
-                                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 border border-slate-200">
                                       {field.type}
                                     </span>
                                   </div>
 
                                   <div className="flex items-center gap-2 ml-5 sm:ml-0">
-                                    <span className="font-mono text-xs text-slate-100 bg-slate-950 px-2 py-0.5 rounded border border-slate-850 break-all select-all">
+                                    <span className="font-mono text-xs text-slate-800 bg-slate-50 px-2 py-0.5 rounded border border-slate-850 break-all select-all">
                                       {field.raw_value}
                                     </span>
 
                                     {onSelectField && (
                                       <button
                                         onClick={() => onSelectField(seg, field)}
-                                        className="p-1 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800 transition"
+                                        className="p-1 text-slate-500 hover:text-sky-600 rounded hover:bg-slate-100 transition"
                                         title="Inspect HL7 specification and FHIR target"
                                       >
                                         <Eye className="w-3.5 h-3.5" />
@@ -385,31 +385,31 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
 
                                 {/* Component Decomposition (if expanded) */}
                                 {isFieldExpanded && hasComponents && (
-                                  <div className="mt-2.5 ml-6 pl-3 border-l-2 border-slate-800 space-y-1.5 text-xs">
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                  <div className="mt-2.5 ml-6 pl-3 border-l-2 border-slate-200 space-y-1.5 text-xs">
+                                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                                       Decomposed Sub-Components:
                                     </p>
                                     {field.repetitions.map((rep, rIdx) => (
                                       <div key={rIdx} className="space-y-1">
                                         {field.repetitions.length > 1 && (
-                                          <span className="text-[10px] text-emerald-400 font-mono">
+                                          <span className="text-[10px] text-emerald-600 font-mono">
                                             [Repetition {rep.repetition_index}]
                                           </span>
                                         )}
                                         {rep.components.map((comp) => (
                                           <div
                                             key={comp.component_index}
-                                            className="flex items-center justify-between bg-slate-950/80 px-2.5 py-1 rounded border border-slate-850"
+                                            className="flex items-center justify-between bg-slate-50/80 px-2.5 py-1 rounded border border-slate-850"
                                           >
                                             <div className="flex items-center gap-2">
                                               <span className="text-slate-500 font-mono text-[10px]">
                                                 .{comp.component_index}
                                               </span>
-                                              <span className="text-slate-300 text-xs">
+                                              <span className="text-slate-600 text-xs">
                                                 {comp.name}
                                               </span>
                                             </div>
-                                            <span className="font-mono text-xs text-cyan-200 font-medium">
+                                            <span className="font-mono text-xs text-sky-700 font-medium">
                                               {comp.value}
                                             </span>
                                           </div>
@@ -431,10 +431,10 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
           </div>
         ) : activeTab === 'table' ? (
           /* Table View */
-          <div className="border border-slate-800 rounded-lg overflow-x-auto bg-slate-900/90">
+          <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white/90">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 font-medium">
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
                   <th className="p-3 w-16">#</th>
                   <th className="p-3 w-24">Segment</th>
                   <th className="p-3 w-48">Standard Title</th>
@@ -442,7 +442,7 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                   <th className="p-3 w-28 text-right">Fields</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850 text-slate-300">
+              <tbody className="divide-y divide-slate-850 text-slate-600">
                 {filteredSegments.map((seg, idx) => {
                   const populated = seg.fields.filter((f) => f.raw_value.trim().length > 0);
                   const preview = populated
@@ -463,11 +463,11 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
                           {seg.segment_id}
                         </span>
                       </td>
-                      <td className="p-3 font-medium text-slate-200">{seg.title}</td>
-                      <td className="p-3 font-mono text-[11px] text-slate-400 truncate max-w-md">
+                      <td className="p-3 font-medium text-slate-700">{seg.title}</td>
+                      <td className="p-3 font-mono text-[11px] text-slate-500 truncate max-w-md">
                         {preview}
                       </td>
-                      <td className="p-3 text-right font-mono text-slate-400">
+                      <td className="p-3 text-right font-mono text-slate-500">
                         {populated.length}
                       </td>
                     </tr>
@@ -480,22 +480,22 @@ export const StructuralTreeViewer: React.FC<StructuralTreeViewerProps> = ({
           /* JSON Inspector View */
           <div className="relative h-full flex flex-col">
             <div className="flex justify-between items-center pb-2">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-500">
                 Complete annotated AST for downstream LLM mapping pipelines
               </span>
               <button
                 onClick={handleCopyJson}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition"
               >
                 {jsonCopied ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  <Copy className="w-3.5 h-3.5 text-slate-500" />
                 )}
                 <span>{jsonCopied ? 'Copied' : 'Copy JSON'}</span>
               </button>
             </div>
-            <pre className="flex-1 p-3 bg-slate-950 text-slate-300 font-mono text-xs rounded-lg border border-slate-800 overflow-auto leading-relaxed select-all">
+            <pre className="flex-1 p-3 bg-slate-50 text-slate-600 font-mono text-xs rounded-lg border border-slate-200 overflow-auto leading-relaxed select-all">
               {JSON.stringify({ metadata, segments }, null, 2)}
             </pre>
           </div>
