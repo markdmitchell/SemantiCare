@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "npm install --include=dev --no-audit --no-fund && tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postbuild": "node -e \"const fs=require('fs');fs.rmSync('../dist',{recursive:true,force:true});fs.cpSync('dist','../dist',{recursive:true})\""
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
