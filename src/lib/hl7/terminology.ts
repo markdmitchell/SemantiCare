@@ -8,8 +8,8 @@ export interface Candidate {
   display: string;
   system: string;
   confidence: number;
-  note?: string;
-  unit?: string;
+  note?: string | undefined;
+  unit?: string | undefined;
 }
 export type AmbiguityKind = "code" | "unit" | "doctype";
 export interface Ambiguity {
@@ -37,21 +37,21 @@ export interface ObsGrounding {
   flag: string;
   resultStatus: string;
   observedAt: string;
-  concept?: Candidate;
+  concept?: Candidate | undefined;
   codeStatus: GroundStatus;
-  ucum?: string;
+  ucum?: string | undefined;
   unitStatus: GroundStatus;
 }
 export interface DocGrounding {
   localCode: string;
   localText: string;
-  concept?: Candidate;
+  concept?: Candidate | undefined;
   status: GroundStatus;
 }
 export interface GroundingResult {
   observations: ObsGrounding[];
-  panel?: Candidate;
-  doc?: DocGrounding;
+  panel?: Candidate | undefined;
+  doc?: DocGrounding | undefined;
   ambiguities: Ambiguity[];
 }
 
@@ -118,7 +118,7 @@ function fuzzy(text: string, pool: C[]): Candidate[] {
     .slice(0, 3);
 }
 
-function apply(amb: Ambiguity, res: Resolutions): { pick?: Candidate; status: GroundStatus } {
+function apply(amb: Ambiguity, res: Resolutions): { pick?: Candidate | undefined; status: GroundStatus } {
   const r = res[amb.id];
   if (r === undefined) return { status: "pending" };
   if (r < 0) return { status: "declined" };
@@ -162,7 +162,7 @@ export function ground(msg: HL7Message, res: Resolutions): GroundingResult {
     } else {
       const entry = LAB.find((l) => l.keys.includes(o.localCode.toUpperCase()));
       if (entry && entry.options.length === 1) {
-        o.concept = { ...entry.options[0], system: LOINC, confidence: 0.98 };
+        o.concept = { ...entry.options[0]!, system: LOINC, confidence: 0.98 };
         o.codeStatus = "auto";
       } else {
         const candidates = entry
