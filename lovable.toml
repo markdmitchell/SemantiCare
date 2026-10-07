@@ -1,3 +1,4 @@
 [run]
 dev = "cd frontend && npm run dev -- --port 8080 --host 0.0.0.0"
-build:dev = "cd frontend && npm install && npm run build"
+"build:dev" = "cd frontend && npm install && npm run build"
+install = "cd frontend && npm install"
