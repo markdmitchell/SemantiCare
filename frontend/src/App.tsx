@@ -10,7 +10,6 @@ import type {
 } from './types/hl7';
 import { fetchSamples, parseHL7, mapHL7, validateFHIRBundle, fetchHealth, fetchMappingRules } from './services/api';
 import { Navbar } from './components/Navbar';
-import { SamplePickerBar } from './components/SamplePickerBar';
 import { HL7InputPanel } from './components/HL7InputPanel';
 import { StructuralTreeViewer } from './components/StructuralTreeViewer';
 import { FHIRBundleViewer } from './components/FHIRBundleViewer';
@@ -287,7 +286,7 @@ export const App: React.FC = () => {
   const unresolvedAmbiguities = mappingResult?.ambiguities.filter((a) => !a.is_resolved) || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-800">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-900">
       {/* Top Navigation */}
       <Navbar
         backendOnline={backendOnline}
@@ -298,6 +297,9 @@ export const App: React.FC = () => {
         conformanceScore={validationResult?.conformance_score}
         canExport={!!mappingResult?.fhir_bundle}
         rulesCount={rulesCount}
+        samples={samples}
+        selectedSampleId={activeSample?.id || ''}
+        onSelectSample={handleSelectSample}
         onToggleMode={(mode) => setActiveMode(mode)}
         onOpenHowItWorks={() => setShowHowItWorks(true)}
         onOpenExport={() => setShowExportModal(true)}
@@ -305,14 +307,6 @@ export const App: React.FC = () => {
         onOpenUserGuide={() => setShowUserGuide(true)}
       />
 
-      {/* Clinical Scenario Selector Bar */}
-      {samples.length > 0 && (
-        <SamplePickerBar
-          samples={samples}
-          selectedSampleId={activeSample?.id || ''}
-          onSelectSample={handleSelectSample}
-        />
-      )}
 
       {/* Error Alert Banner if any */}
       {errorMessage && (

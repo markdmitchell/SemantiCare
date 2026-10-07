@@ -1,188 +1,125 @@
 import React from 'react';
 import {
-  Activity,
-  Cpu,
-  BookOpen,
-  Layers,
-  Sparkles,
-  AlertTriangle,
-  FileCheck,
-  Download,
-  Database,
-  GitBranch,
+  HeartPulse, BookOpen, Layers, Sparkles, AlertTriangle, FileCheck, Download, Database, GitBranch,
+  FileText, FlaskConical,
 } from 'lucide-react';
+import type { HL7Sample } from '../types/hl7';
+
+type Mode = 'structural' | 'semantic' | 'resolution' | 'validation';
 
 interface NavbarProps {
   backendOnline: boolean;
   totalSegments: number;
   messageType?: string;
-  activeMode: 'structural' | 'semantic' | 'resolution' | 'validation';
+  activeMode: Mode;
   unresolvedAmbiguitiesCount: number;
   conformanceScore?: number;
   canExport?: boolean;
   rulesCount?: number;
-  onToggleMode: (mode: 'structural' | 'semantic' | 'resolution' | 'validation') => void;
+  samples?: HL7Sample[];
+  selectedSampleId?: string;
+  onSelectSample?: (s: HL7Sample) => void;
+  onToggleMode: (mode: Mode) => void;
   onOpenHowItWorks: () => void;
   onOpenExport: () => void;
   onOpenRulesModal: () => void;
   onOpenUserGuide: () => void;
 }
 
+const sampleIcon = (category: string) => {
+  if (category.startsWith('Demographics')) return <FileText className="w-3.5 h-3.5" />;
+  if (category.startsWith('Diagnostic')) return <FlaskConical className="w-3.5 h-3.5" />;
+  if (category.startsWith('Ambiguity')) return <AlertTriangle className="w-3.5 h-3.5" />;
+  if (category.startsWith('Custom')) return <Layers className="w-3.5 h-3.5" />;
+  return <Sparkles className="w-3.5 h-3.5" />;
+};
+
 export const Navbar: React.FC<NavbarProps> = ({
-  backendOnline,
-  totalSegments,
-  messageType,
-  activeMode,
-  unresolvedAmbiguitiesCount,
-  conformanceScore,
-  canExport = false,
-  rulesCount = 0,
-  onToggleMode,
-  onOpenHowItWorks,
-  onOpenExport,
-  onOpenRulesModal,
-  onOpenUserGuide,
+  backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
+  canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
+  onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide,
 }) => {
+  const tab = (mode: Mode, icon: React.ReactNode, label: string, extra?: React.ReactNode) => (
+    <button
+      onClick={() => onToggleMode(mode)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition whitespace-nowrap cursor-pointer ${
+        activeMode === mode ? 'bg-white text-sky-800 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'
+      }`}
+    >
+      {icon}<span>{label}</span>{extra}
+    </button>
+  );
+  const ghost = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer';
+
   return (
-    <header className="border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-30 px-5 py-3">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-600 via-amber-600 to-emerald-600 flex items-center justify-center shadow-lg shadow-sky-200/30">
-            <Activity className="w-5 h-5 text-slate-900" />
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+      {/* Row 1 */}
+      <div className="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center shadow-sm">
+            <HeartPulse className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-slate-900 tracking-tight">SemantiCare</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-                Production Ready
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">AI-Assisted Semantic Data Mapper • HL7 v2 to FHIR R4</p>
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900 tracking-tight leading-tight">SemantiCare</div>
+            <div className="text-[11px] text-slate-500 truncate">HL7 v2 → FHIR R4 clinical bridge</div>
+          </div>
+          <div className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
+            <span className={`w-1.5 h-1.5 rounded-full ${backendOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {backendOnline ? 'Engine ready' : 'Engine offline'}
+            {messageType && <span className="text-slate-400">· {messageType} · {totalSegments} segs</span>}
           </div>
         </div>
-
-        {/* Center: 4-way Studio View Switcher */}
-        <div className="hidden lg:flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
-          <button
-            onClick={() => onToggleMode('structural')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeMode === 'structural'
-                ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Structural AST</span>
+        <div className="flex items-center gap-1 text-xs">
+          <button onClick={onOpenRulesModal} className={ghost} title="Institutional mapping memory">
+            <Database className="w-3.5 h-3.5" /><span className="hidden sm:inline">Memory</span>
+            {rulesCount > 0 && <span className="px-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-mono font-bold">{rulesCount}</span>}
           </button>
-
-          <button
-            onClick={() => onToggleMode('resolution')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition relative ${
-              activeMode === 'resolution'
-                ? 'bg-amber-50 text-amber-700 border border-amber-200 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-            <span>Resolution Deck</span>
-            {unresolvedAmbiguitiesCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px]">
-                {unresolvedAmbiguitiesCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => onToggleMode('semantic')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeMode === 'semantic'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            <span>FHIR R4 Studio</span>
-          </button>
-
-          <button
-            onClick={() => onToggleMode('validation')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeMode === 'validation'
-                ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <FileCheck className="w-3.5 h-3.5 text-sky-600" />
-            <span>Validation</span>
-            {conformanceScore !== undefined && (
-              <span className="text-[10px] font-mono text-emerald-700">
-                {conformanceScore}%
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Right Info & Actions */}
-        <div className="flex items-center gap-2.5 text-xs">
-          {/* Export Bundle Button */}
+          <button onClick={onOpenUserGuide} className={ghost}><BookOpen className="w-3.5 h-3.5" /><span className="hidden sm:inline">Guide</span></button>
+          <button onClick={onOpenHowItWorks} className={ghost}><GitBranch className="w-3.5 h-3.5" /><span className="hidden sm:inline">Roadmap</span></button>
           <button
             onClick={onOpenExport}
             disabled={!canExport}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium shadow-md transition active:scale-[0.98] ${
-              canExport
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-100/40 cursor-pointer'
-                : 'bg-slate-100 text-slate-500 border border-slate-200/60 cursor-not-allowed shadow-none'
+            className={`ml-2 flex items-center gap-1.5 px-3.5 py-1.5 rounded-md font-medium transition ${
+              canExport ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-sm cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
             }`}
-            title={canExport ? "Export FHIR Bundle or NDJSON" : "Map a message to FHIR first to enable export"}
+            title={canExport ? 'Export FHIR Bundle or NDJSON' : 'Map a message to FHIR first'}
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export</span>
+            <Download className="w-3.5 h-3.5" />Export
           </button>
+        </div>
+      </div>
 
-          {messageType && (
-            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700">
-              <Cpu className="w-3.5 h-3.5 text-sky-600" />
-              <span>{messageType} ({totalSegments} segs)</span>
+      {/* Row 2 */}
+      <div className="bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-5 py-1.5 flex items-center justify-between gap-4">
+          <nav className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg overflow-x-auto">
+            {tab('structural', <Layers className="w-3.5 h-3.5" />, 'Structure')}
+            {tab('resolution', <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />, 'Review',
+              unresolvedAmbiguitiesCount > 0 && <span className="px-1.5 rounded-full bg-amber-500 text-white font-bold text-[10px]">{unresolvedAmbiguitiesCount}</span>)}
+            {tab('semantic', <Sparkles className="w-3.5 h-3.5 text-sky-600" />, 'FHIR R4')}
+            {tab('validation', <FileCheck className="w-3.5 h-3.5 text-emerald-600" />, 'Validation',
+              conformanceScore !== undefined && <span className="text-[10px] font-mono text-emerald-700">{conformanceScore}%</span>)}
+          </nav>
+          {samples.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto min-w-0">
+              <span className="hidden lg:inline text-[11px] font-medium text-slate-400 uppercase tracking-wider mr-1">Scenarios</span>
+              {samples.map((s) => {
+                const sel = s.id === selectedSampleId;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => onSelectSample?.(s)}
+                    title={s.description}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition cursor-pointer ${
+                      sel ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    {sampleIcon(s.category)}{s.title.split(' - ')[0]}
+                  </button>
+                );
+              })}
             </div>
           )}
-
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-slate-100/80 border border-slate-200/80">
-            <div className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`} />
-            <span className="text-slate-600 font-medium hidden sm:inline">
-              FastAPI {backendOnline ? 'Online' : 'Offline'}
-            </span>
-          </div>
-
-          <button
-            onClick={onOpenRulesModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-white transition cursor-pointer"
-            title="Manage Institutional Mapping Memory & Rulebase"
-          >
-            <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden sm:inline">Memory</span>
-            {rulesCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono font-bold">
-                {rulesCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={onOpenUserGuide}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-white transition cursor-pointer"
-            title="Open Clinical Informaticist & User Guide"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-sky-600" />
-            <span className="hidden sm:inline">Guide</span>
-          </button>
-
-          <button
-            onClick={onOpenHowItWorks}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-white transition"
-          >
-            <GitBranch className="w-3.5 h-3.5 text-amber-600" />
-            <span className="hidden sm:inline">Roadmap</span>
-          </button>
         </div>
       </div>
     </header>
