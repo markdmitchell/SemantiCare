@@ -153,28 +153,28 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
     switch (type) {
       case 'MISSING_UNIT':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             Unit Normalization
           </span>
         );
       case 'LOCAL_TERMINOLOGY':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
             Terminology (LOINC)
           </span>
         );
       case 'CUSTOM_Z_SEGMENT':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/10 text-purple-600 border border-purple-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
             Z-Segment Mapping
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-700 text-slate-300">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-200 text-slate-600">
             {type}
           </span>
         );
@@ -182,32 +182,32 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white/90">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-white">Institutional Mapping Memory & Rulebase</h2>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <h2 className="text-lg font-semibold text-slate-900">Institutional Mapping Memory & Rulebase</h2>
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                   {rules.length} Active Rules
                 </span>
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-800 text-slate-400">
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-500">
                   SQLite ACID
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Institutional knowledge base persisted across sessions. Groundings and unit defaults auto-resolve matching future messages.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -218,14 +218,14 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
           <div
             className={`px-6 py-2.5 flex items-center justify-between text-xs font-medium ${
               statusMessage.type === 'success'
-                ? 'bg-emerald-950/60 text-emerald-300 border-b border-emerald-800/40'
-                : 'bg-rose-950/60 text-rose-300 border-b border-rose-800/40'
+                ? 'bg-emerald-50/60 text-emerald-700 border-b border-emerald-200/40'
+                : 'bg-rose-50/60 text-rose-700 border-b border-rose-200/40'
             }`}
           >
             <span>{statusMessage.text}</span>
             <button
               onClick={() => setStatusMessage(null)}
-              className="text-slate-400 hover:text-slate-200 ml-4 font-bold"
+              className="text-slate-500 hover:text-slate-700 ml-4 font-bold"
             >
               ×
             </button>
@@ -233,7 +233,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
         )}
 
         {/* Toolbar & Filter Bar */}
-        <div className="px-6 py-3 border-b border-slate-800 bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-3 border-b border-slate-200 bg-white/50 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 flex-1">
             {/* Search Input */}
             <div className="relative min-w-[200px] flex-1 max-w-xs">
@@ -243,17 +243,17 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="Search local code, LOINC, unit, or notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             {/* Facility Filter */}
             <div className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" />
+              <Building2 className="w-3.5 h-3.5 text-slate-500" />
               <select
                 value={facilityFilter}
                 onChange={(e) => setFacilityFilter(e.target.value)}
-                className="text-xs bg-slate-950 border border-slate-800 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500"
               >
                 <option value="ALL">All Facilities</option>
                 <option value="*">Global (*)</option>
@@ -269,11 +269,11 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
 
             {/* Type Filter */}
             <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <Filter className="w-3.5 h-3.5 text-slate-500" />
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="text-xs bg-slate-950 border border-slate-800 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500"
               >
                 <option value="ALL">All Rule Types</option>
                 <option value="LOCAL_TERMINOLOGY">Local Terminology</option>
@@ -288,7 +288,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
               onClick={() => setIsAdding(!isAdding)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                 isAdding
-                  ? 'bg-slate-800 text-slate-200 border border-slate-700'
+                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
               }`}
             >
@@ -298,7 +298,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
 
             <button
               onClick={handleExportConceptMap}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
               title="Download standard FHIR R4 ConceptMap Resource JSON"
             >
               <Download className="w-3.5 h-3.5" />
@@ -307,7 +307,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
 
             <button
               onClick={loadRules}
-              className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
               title="Refresh Rulebase"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -319,10 +319,10 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
         {isAdding && (
           <form
             onSubmit={handleSaveRule}
-            className="p-5 border-b border-emerald-500/20 bg-emerald-950/20 grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-2 duration-150"
+            className="p-5 border-b border-emerald-500/20 bg-emerald-50/20 grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-2 duration-150"
           >
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
                 Sending Facility (MSH-4)
               </label>
               <input
@@ -330,18 +330,18 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="e.g. METRO_HEALTH or * (Global)"
                 value={formFacility}
                 onChange={(e) => setFormFacility(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
                 required
               />
               <span className="text-[10px] text-slate-500">Use '*' to apply across all facilities.</span>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Rule Category</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Rule Category</label>
               <select
                 value={formRuleType}
                 onChange={(e) => setFormRuleType(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
               >
                 <option value="LOCAL_TERMINOLOGY">Local Terminology (Grounding to LOINC)</option>
                 <option value="MISSING_UNIT">Missing Unit Default (UCUM)</option>
@@ -350,7 +350,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
                 Source Key / Local Code
               </label>
               <input
@@ -358,13 +358,13 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="e.g. BP_LOCAL or 29463-7"
                 value={formSourceKey}
                 onChange={(e) => setFormSourceKey(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500 font-mono"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
                 Target Standard Value
               </label>
               <input
@@ -372,13 +372,13 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="e.g. 85354-9 or kg"
                 value={formTargetValue}
                 onChange={(e) => setFormTargetValue(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500 font-mono"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
                 Standard Display Name
               </label>
               <input
@@ -386,22 +386,22 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="e.g. Blood pressure panel or Kilograms"
                 value={formTargetDisplay}
                 onChange={(e) => setFormTargetDisplay(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Informaticist / Author</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Informaticist / Author</label>
               <input
                 type="text"
                 value={formAuthor}
                 onChange={(e) => setFormAuthor(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
                 Governance Notes / Rationale
               </label>
               <input
@@ -409,7 +409,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                 placeholder="e.g. Calibrated bedside telemetry monitor protocol standard."
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
-                className="w-full text-xs bg-slate-950 border border-slate-800 text-slate-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -417,7 +417,7 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-md hover:bg-slate-800 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors"
               >
                 Cancel
               </button>
@@ -443,16 +443,16 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
         {/* Rules Table / Content Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500 space-y-2">
+              <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
               <p className="text-xs">Loading institutional rules repository...</p>
             </div>
           ) : filteredRules.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-slate-800 rounded-xl p-8">
-              <div className="p-3 bg-slate-800/50 rounded-full text-slate-500 mb-3">
+            <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-slate-200 rounded-xl p-8">
+              <div className="p-3 bg-slate-100/50 rounded-full text-slate-500 mb-3">
                 <Database className="w-6 h-6" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-300">No matching institutional rules</h3>
+              <h3 className="text-sm font-semibold text-slate-600">No matching institutional rules</h3>
               <p className="text-xs text-slate-500 max-w-sm mt-1">
                 {searchTerm || facilityFilter !== 'ALL' || typeFilter !== 'ALL'
                   ? 'No rules match the selected filter criteria. Try resetting filters.'
@@ -464,20 +464,20 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
               {filteredRules.map((rule) => (
                 <div
                   key={rule.id}
-                  className="bg-slate-950/60 border border-slate-800/80 hover:border-slate-700/80 rounded-lg p-4 transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                  className="bg-slate-50/60 border border-slate-200/80 hover:border-slate-200/80 rounded-lg p-4 transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
                 >
                   <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       {getRuleTypeBadge(rule.rule_type)}
 
                       {/* Facility Badge */}
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
-                        <Building2 className="w-3 h-3 text-emerald-400" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                        <Building2 className="w-3 h-3 text-emerald-600" />
                         {rule.facility === '*' ? 'Global (*)' : rule.facility}
                       </span>
 
                       {/* Usage counter badge */}
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono text-emerald-600 bg-emerald-500/10 border border-emerald-500/20">
                         <Sparkles className="w-3 h-3" />
                         Applied {rule.applied_count}×
                       </span>
@@ -490,24 +490,24 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
 
                     {/* Mapping Expression */}
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-mono font-semibold text-slate-200 px-2 py-0.5 bg-slate-900 rounded border border-slate-800">
+                      <span className="font-mono font-semibold text-slate-700 px-2 py-0.5 bg-white rounded border border-slate-200">
                         {rule.source_key}
                       </span>
-                      <span className="text-emerald-400 font-bold">→</span>
-                      <span className="font-mono font-semibold text-emerald-300 px-2 py-0.5 bg-emerald-950/50 rounded border border-emerald-800/40">
+                      <span className="text-emerald-600 font-bold">→</span>
+                      <span className="font-mono font-semibold text-emerald-700 px-2 py-0.5 bg-emerald-50/50 rounded border border-emerald-200/40">
                         {rule.target_value}
                       </span>
                       {rule.target_display && (
-                        <span className="text-xs text-slate-400 italic">
+                        <span className="text-xs text-slate-500 italic">
                           ({rule.target_display})
                         </span>
                       )}
                     </div>
 
                     {/* Notes & Author */}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                       {rule.notes && (
-                        <span className="flex items-center gap-1 text-slate-300">
+                        <span className="flex items-center gap-1 text-slate-600">
                           <Info className="w-3 h-3 text-slate-500 flex-shrink-0" />
                           {rule.notes}
                         </span>
@@ -524,11 +524,11 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
                     <button
                       onClick={() => handleDeleteRule(rule.id)}
                       disabled={deletingId === rule.id}
-                      className="p-1.5 text-slate-500 hover:text-rose-400 rounded-md hover:bg-rose-500/10 transition-colors opacity-80 group-hover:opacity-100"
+                      className="p-1.5 text-slate-500 hover:text-rose-600 rounded-md hover:bg-rose-500/10 transition-colors opacity-80 group-hover:opacity-100"
                       title="Delete rule"
                     >
                       {deletingId === rule.id ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-rose-400" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-rose-600" />
                       ) : (
                         <Trash2 className="w-4 h-4" />
                       )}
@@ -541,14 +541,14 @@ export const InstitutionalRulesModal: React.FC<InstitutionalRulesModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between text-xs text-slate-500">
+        <div className="px-6 py-3 border-t border-slate-200 bg-white/80 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Learning engine active • Auto-applies to matching HL7 messages</span>
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors"
+            className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-colors"
           >
             Close
           </button>

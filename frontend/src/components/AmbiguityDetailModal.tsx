@@ -30,21 +30,21 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-slate-950 border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-950/80 border border-amber-800 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <div className="w-8 h-8 rounded-lg bg-amber-50/80 border border-amber-200 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-100 text-sm">{ambiguity.title}</h3>
-              <p className="text-xs text-slate-400">Human-in-the-Loop Ambiguity Resolution</p>
+              <h3 className="font-bold text-slate-800 text-sm">{ambiguity.title}</h3>
+              <p className="text-xs text-slate-500">Human-in-the-Loop Ambiguity Resolution</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -52,18 +52,18 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
 
         {/* Content */}
         <div className="p-5 space-y-4 text-xs">
-          <div className="bg-slate-950 rounded-lg p-3 border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-slate-400 font-mono text-[11px]">
-              <span>Field Location: <strong className="text-cyan-400">{ambiguity.field_location}</strong></span>
-              <span className="uppercase text-amber-400">{ambiguity.type}</span>
+          <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 space-y-2">
+            <div className="flex items-center justify-between text-slate-500 font-mono text-[11px]">
+              <span>Field Location: <strong className="text-sky-600">{ambiguity.field_location}</strong></span>
+              <span className="uppercase text-amber-600">{ambiguity.type}</span>
             </div>
-            <p className="text-slate-300 leading-relaxed">{ambiguity.message}</p>
+            <p className="text-slate-600 leading-relaxed">{ambiguity.message}</p>
           </div>
 
           {ambiguity.suggested_options && ambiguity.suggested_options.length > 0 && (
             <div>
-              <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
-                <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+              <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+                <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
                 Select Clinical Resolution:
               </h4>
 
@@ -73,8 +73,8 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
                     key={option}
                     className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition select-none ${
                       selectedChoice === option
-                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-200'
-                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-850'
+                        ? 'bg-sky-50/80 border-sky-500 text-sky-700'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-850'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -83,13 +83,13 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
                         name="choice"
                         checked={selectedChoice === option}
                         onChange={() => setSelectedChoice(option)}
-                        className="text-cyan-500 bg-slate-900 border-slate-700 focus:ring-0"
+                        className="text-sky-500 bg-white border-slate-200 focus:ring-0"
                       />
                       <span className="font-mono text-xs font-semibold">{option}</span>
                     </div>
 
                     {ambiguity.default_choice === option && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Recommended
                       </span>
                     )}
@@ -101,10 +101,10 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white text-xs transition"
+            className="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 text-xs transition"
           >
             Cancel
           </button>
@@ -112,7 +112,7 @@ export const AmbiguityDetailModal: React.FC<AmbiguityDetailModalProps> = ({
           <button
             onClick={handleApply}
             disabled={resolved}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-medium text-xs transition"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-200 text-white font-medium text-xs transition"
           >
             {resolved ? (
               <>

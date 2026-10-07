@@ -52,18 +52,18 @@ export const SegmentDetailModal: React.FC<SegmentDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-slate-950 border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
-            <span className="font-mono text-sm font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+            <span className="font-mono text-sm font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
               {fieldKey}
             </span>
-            <h3 className="font-semibold text-slate-100 text-sm">{field.name}</h3>
+            <h3 className="font-semibold text-slate-800 text-sm">{field.name}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -73,25 +73,25 @@ export const SegmentDetailModal: React.FC<SegmentDetailModalProps> = ({
         <div className="p-5 space-y-4 overflow-y-auto text-xs">
           {/* HL7 Specification Details */}
           <div>
-            <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+            <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-sky-600" />
               HL7 v2 Standard Definition
             </h4>
-            <div className="bg-slate-950 rounded-lg p-3 border border-slate-800 space-y-2">
-              <p className="text-slate-300">{field.description || 'Standard HL7 data element.'}</p>
-              <div className="flex items-center gap-4 text-slate-400 pt-1">
-                <span>Data Type: <strong className="text-cyan-300 font-mono">{field.type}</strong></span>
-                <span>Segment: <strong className="text-slate-200">{segment.title}</strong></span>
+            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 space-y-2">
+              <p className="text-slate-600">{field.description || 'Standard HL7 data element.'}</p>
+              <div className="flex items-center gap-4 text-slate-500 pt-1">
+                <span>Data Type: <strong className="text-sky-700 font-mono">{field.type}</strong></span>
+                <span>Segment: <strong className="text-slate-700">{segment.title}</strong></span>
               </div>
             </div>
           </div>
 
           {/* Value Preview */}
           <div>
-            <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] mb-2">
+            <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px] mb-2">
               Ingested Value
             </h4>
-            <div className="bg-slate-950 font-mono p-3 rounded-lg border border-slate-800 text-slate-100 break-all select-all">
+            <div className="bg-slate-50 font-mono p-3 rounded-lg border border-slate-200 text-slate-800 break-all select-all">
               {field.raw_value || <span className="text-slate-600 italic">Empty</span>}
             </div>
           </div>
@@ -99,16 +99,16 @@ export const SegmentDetailModal: React.FC<SegmentDetailModalProps> = ({
           {/* Component Drill-down if present */}
           {field.repetitions.length > 0 && field.repetitions[0].components.length > 1 && (
             <div>
-              <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] mb-2">
+              <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px] mb-2">
                 Sub-Component Breakdown
               </h4>
-              <div className="space-y-1 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+              <div className="space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 {field.repetitions[0].components.map((comp) => (
                   <div key={comp.component_index} className="flex justify-between items-center py-1 px-2 border-b border-slate-850 last:border-b-0">
-                    <span className="text-slate-400">
+                    <span className="text-slate-500">
                       {comp.name} <span className="text-[10px] text-slate-600 font-mono">(.{comp.component_index})</span>:
                     </span>
-                    <span className="font-mono text-cyan-300 font-medium">{comp.value}</span>
+                    <span className="font-mono text-sky-700 font-medium">{comp.value}</span>
                   </div>
                 ))}
               </div>
@@ -117,35 +117,35 @@ export const SegmentDetailModal: React.FC<SegmentDetailModalProps> = ({
 
           {/* Target FHIR R4 Semantic Mapping (Phase 2 Preview) */}
           <div className="pt-2">
-            <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
-              <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+            <h4 className="font-semibold text-slate-600 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
               Target FHIR R4 Mapping (Phase 2 Engine Preview)
             </h4>
             {fhirMapping ? (
-              <div className="bg-emerald-950/30 border border-emerald-800/60 rounded-lg p-3.5 space-y-2">
+              <div className="bg-emerald-50/30 border border-emerald-200/60 rounded-lg p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-emerald-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-semibold text-emerald-700 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     FHIR Resource: {fhirMapping.fhirResource}
                   </span>
-                  <code className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-200 border border-emerald-800 font-mono text-[11px]">
+                  <code className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[11px]">
                     {fhirMapping.path}
                   </code>
                 </div>
-                <p className="text-slate-300 text-[11px]">{fhirMapping.notes}</p>
+                <p className="text-slate-600 text-[11px]">{fhirMapping.notes}</p>
               </div>
             ) : segment.is_custom ? (
-              <div className="bg-rose-950/30 border border-rose-800/60 rounded-lg p-3 text-rose-200 space-y-1">
+              <div className="bg-rose-50/30 border border-rose-200/60 rounded-lg p-3 text-rose-700 space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
                   Custom Z-Segment Element
                 </p>
-                <p className="text-slate-300 text-[11px]">
+                <p className="text-slate-600 text-[11px]">
                   Requires LLM semantic translation to infer custom FHIR Extension or appropriate DomainResource.
                 </p>
               </div>
             ) : (
-              <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-400 text-[11px]">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-500 text-[11px]">
                 Standard FHIR mapping defined via deterministic rule or LLM semantic context extraction.
               </div>
             )}
@@ -153,10 +153,10 @@ export const SegmentDetailModal: React.FC<SegmentDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+            className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition"
           >
             Close
           </button>
