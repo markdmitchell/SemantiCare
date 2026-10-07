@@ -22,6 +22,9 @@ import { AmbiguityDetailModal } from './components/AmbiguityDetailModal';
 import { ExportModal } from './components/ExportModal';
 import { HowItWorksModal } from './components/HowItWorksModal';
 import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
+import { UserGuideModal } from './components/UserGuideModal';
+import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
+import { Footer } from './components/Footer';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -46,6 +49,8 @@ export const App: React.FC = () => {
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false);
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
+  const [showUserGuide, setShowUserGuide] = useState<boolean>(false);
+  const [footerModalTab, setFooterModalTab] = useState<FooterTab | null>(null);
   const [rulesCount, setRulesCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -297,6 +302,7 @@ export const App: React.FC = () => {
         onOpenHowItWorks={() => setShowHowItWorks(true)}
         onOpenExport={() => setShowExportModal(true)}
         onOpenRulesModal={() => setShowRulesModal(true)}
+        onOpenUserGuide={() => setShowUserGuide(true)}
       />
 
       {/* Clinical Scenario Selector Bar */}
@@ -388,6 +394,13 @@ export const App: React.FC = () => {
         </section>
       </main>
 
+      {/* Footer with About, Contact, Privacy, Terms, User Guide, and GitHub */}
+      <Footer
+        onOpenFooterModal={(tab) => setFooterModalTab(tab)}
+        onOpenUserGuide={() => setShowUserGuide(true)}
+        onOpenRoadmap={() => setShowHowItWorks(true)}
+      />
+
       {/* Modals */}
       {inspectingField && (
         <SegmentDetailModal
@@ -430,6 +443,17 @@ export const App: React.FC = () => {
             refreshRulesCount();
             executePipeline(rawHL7);
           }}
+        />
+      )}
+
+      {showUserGuide && (
+        <UserGuideModal onClose={() => setShowUserGuide(false)} />
+      )}
+
+      {footerModalTab && (
+        <FooterPagesModal
+          initialTab={footerModalTab}
+          onClose={() => setFooterModalTab(null)}
         />
       )}
     </div>

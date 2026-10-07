@@ -9,6 +9,7 @@ import {
   FileCheck,
   Download,
   Database,
+  GitBranch,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -24,6 +25,7 @@ interface NavbarProps {
   onOpenHowItWorks: () => void;
   onOpenExport: () => void;
   onOpenRulesModal: () => void;
+  onOpenUserGuide: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -39,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenHowItWorks,
   onOpenExport,
   onOpenRulesModal,
+  onOpenUserGuide,
 }) => {
   return (
     <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-5 py-3">
@@ -165,10 +168,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
+            onClick={onOpenUserGuide}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+            title="Open Clinical Informaticist & User Guide"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Guide</span>
+          </button>
+
+          <button
             onClick={onOpenHowItWorks}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition"
           >
-            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <GitBranch className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Roadmap</span>
           </button>
         </div>
