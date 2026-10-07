@@ -1,0 +1,4 @@
+[run]
+dev = "npm --prefix frontend run dev -- --port 8080 --host 0.0.0.0"
+"build:dev" = "npm --prefix frontend run build"
+install = "npm --prefix frontend install"
