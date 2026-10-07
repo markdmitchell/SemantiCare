@@ -153,6 +153,21 @@ Comprehensive technical, clinical, and operational documentation is available in
   * Multi-stage `Dockerfile` for frontend with Nginx reverse proxy.
   * Single-command orchestration via `docker-compose.yml`.
 
+### Version 1.1: Institutional Mapping Memory & Clinical NLP
+* **Persistent Mapping Memory & Rulebase**:
+  * **SQLite ACID Persistence**: Saves clinical informaticist unit defaults, local terminology groundings, and Z-segment translations (`backend/app/data/mapping_rules.db`).
+  * **Facility-Aware Context**: Matches rules against sending facility (`MSH-4`) and receiving facility (`MSH-6`) with global wildcard (`*`) fallback.
+  * **Automated Ambiguity Resolution**: Incoming messages matching established rules automatically resolve ambiguities with high confidence (100%), tagging resolutions with `is_resolved=True` and institutional attribution.
+  * **Interactive Rule Management UI**: Dedicated modal to inspect, search, filter by facility/type, create new rules, and delete obsolete entries.
+  * **1-Click HITL Rule Learning**: "Remember this rule in Mapping Memory" checkbox directly in the Resolution Deck to capture informaticist decisions immediately.
+  * **FHIR ConceptMap Export**: Generates standard HL7 FHIR `ConceptMap` JSON resources for interoperability across hospital IT systems.
+* **NTE Unstructured Note Clinical Entity Extraction (Clinical NLP)**:
+  * **Narrative Note Parsing**: Automatically extracts actionable clinical entities from unstructured physician and pathologist `NTE` comments.
+  * **Condition Extraction**: Maps provisional diagnoses and findings (e.g. pneumonia, atelectasis, pleural effusion, hyperglycemia) to FHIR `Condition` resources with ICD-10-CM coding.
+  * **AllergyIntolerance Extraction**: Identifies drug allergies (e.g. Penicillin, Sulfa, Aspirin, Latex) with RxNorm / SNOMED CT terminology.
+  * **ServiceRequest Extraction**: Converts physician care plan follow-up recommendations (e.g. HbA1c screening, echocardiogram consult) into FHIR `ServiceRequest` proposals.
+  * **End-to-End Lineage & Provenance**: Extracted entities are tagged with `nte-extracted` security metadata and linked to patient/encounter surrogate URNs.
+
 ---
 
 ## Quickstart

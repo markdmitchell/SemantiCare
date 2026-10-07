@@ -1,4 +1,4 @@
-import type { HL7Sample, ParseHL7Response, MapHL7Response, ValidationResult } from '../types/hl7';
+import type { HL7Sample, ParseHL7Response, MapHL7Response, ValidationResult, MappingRule } from '../types/hl7';
 
 const API_BASE = '/api';
 
@@ -85,4 +85,46 @@ export async function pushBundleToFHIRServer(
   }
   return res.json();
 }
+
+export async function fetchMappingRules(facility?: string): Promise<{ count: number; facility_filter?: string; rules: MappingRule[] }> {
+  const url = facility ? `${API_BASE}/rules?facility=${encodeURIComponent(facility)}` : `${API_BASE}/rules`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Rules API error (${res.status}): ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function saveMappingRule(rule: Partial<MappingRule>): Promise<{ success: boolean; rule: MappingRule; message: string }> {
+  const res = await fetch(`${API_BASE}/rules`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(rule),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to save mapping rule (${res.status}): ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteMappingRule(ruleId: string): Promise<{ success: boolean; deleted_id: string; message: string }> {
+  const res = await fetch(`${API_BASE}/rules/${encodeURIComponent(ruleId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete mapping rule (${res.status}): ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function exportRulesConceptMap(): Promise<any> {
+  const res = await fetch(`${API_BASE}/rules/export`);
+  if (!res.ok) {
+    throw new Error(`Failed to export ConceptMap (${res.status}): ${res.statusText}`);
+  }
+  return res.json();
+}
+
 

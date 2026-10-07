@@ -1,8 +1,11 @@
-import httpx
+from fastapi.testclient import TestClient
 import sys
+from app.main import app
+
 
 def main():
-    client = httpx.Client(base_url="http://127.0.0.1:8000")
+    client = TestClient(app)
+
 
     # 1. Samples
     samples_res = client.get("/api/samples")
@@ -58,7 +61,52 @@ def main():
         print(f"    - LOINC {c['code']}: {c['display']} (Score: {c['confidence']})")
     assert len(candidates) > 0 or exact is not None
 
+    # 7. Institutional Mapping Memory & Rulebase Test
+    print("\n--- Testing Institutional Mapping Memory (v1.1) ---")
+    rules_res = client.get("/api/rules")
+    assert rules_res.status_code == 200
+    rules_data = rules_res.json()
+    print(f"  Existing Institutional Rules: {rules_data['count']}")
+
+    # Add a learned rule for ICU_BED_3 missing unit
+    new_rule_payload = {
+        "facility": "ICU_BED_3",
+        "rule_type": "MISSING_UNIT",
+        "source_key": "29463-7",
+        "target_value": "kg",
+        "target_display": "Kilograms (kg)",
+        "author": "Dr. Sarah Chen, Informatics Lead",
+        "notes": "Calibrated bedside smart-scale unit confirmation.",
+    }
+    save_res = client.post("/api/rules", json=new_rule_payload)
+    assert save_res.status_code == 200
+    saved_rule = save_res.json()["rule"]
+    print(f"  Saved New Rule: ID={saved_rule['id']} Facility={saved_rule['facility']} Source={saved_rule['source_key']} -> {saved_rule['target_value']}")
+
+    # Re-map Sample 3 with this rule in place
+    sample_3 = next(s for s in samples if s["id"] == "oru-r01-ambiguous-vitals")
+    remap_res = client.post("/api/map", json={"raw_hl7": sample_3["raw"]})
+    assert remap_res.status_code == 200
+    remap_data = remap_res.json()
+    auto_resolved = [a for a in remap_data["ambiguities"] if a.get("is_resolved") and a.get("type") == "MISSING_UNIT"]
+    assert len(auto_resolved) >= 1
+    print(f"  Verified Auto-Resolution: Ambiguity for {auto_resolved[0]['title']} auto-resolved by {auto_resolved[0]['resolved_by']}!")
+
+    # Test FHIR ConceptMap export
+    concept_map_res = client.get("/api/rules/export")
+    assert concept_map_res.status_code == 200
+    concept_map = concept_map_res.json()
+    assert concept_map["resourceType"] == "ConceptMap"
+    print(f"  Exported FHIR ConceptMap: Title='{concept_map['title']}' Groups={len(concept_map.get('group', []))}")
+
+    # Delete rule cleanup
+    del_res = client.delete(f"/api/rules/{saved_rule['id']}")
+    assert del_res.status_code == 200
+    print(f"  Deleted Test Rule: {del_res.json()['deleted_id']}")
+
     print("\n=== ALL INTEGRATION VERIFICATION CHECKS PASSED SUCCESSFULLY ===")
+
 
 if __name__ == "__main__":
     main()
+
