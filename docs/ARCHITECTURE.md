@@ -134,8 +134,26 @@ When clinical data lacks essential semantic attributes, pure automation risks si
   * Evaluates bundles against both base **HL7 FHIR R4 Core** and **US Core 3.1.1** profile rules.
   * Validates mandatory elements (e.g., `Encounter.status`, `Observation.code`, `Observation.subject`, `Condition.code`).
   * Verifies referential integrity ensuring that every `subject.reference` and `encounter.reference` matches a declared resource ID within the transaction bundle.
-* **Conformance Scoring**:
-  * Computes a quantitative compliance score (0% to 100%) by applying weighted penalties for schema errors and profile warnings.
+---
+
+### 3.6. Persistent Institutional Mapping Memory Subsystem (v1.1)
+* **ACID Persistence Engine (`app/rules/mapping_memory.py`)**:
+  * Utilizes Python's zero-dependency built-in `sqlite3` to maintain an institutional clinical knowledge base (`data/mapping_rules.db`).
+  * Indexing on `(facility, rule_type, source_key)` provides sub-millisecond retrieval during message parsing loops.
+  * Hierarchical resolution order: Facility-specific rule (`MSH-4` or `MSH-6`) $\rightarrow$ Global rule (`*`).
+  * Usage tracking metrics (`applied_count`) record learning efficacy and institutional adoption.
+* **Standard FHIR ConceptMap Generator**:
+  * Programmatically serializes active institutional rules into standard HL7 FHIR `ConceptMap` resources.
+
+---
+
+### 3.7. Clinical Narrative Entity Extraction Subsystem (v1.1)
+* **Unstructured Note Parsing (`app/nlp/clinical_ner.py`)**:
+  * Ingests physician and pathologist free-text comments from `NTE` segments.
+  * Extracts structured findings into `Condition` resources with ICD-10-CM coding.
+  * Extracts drug allergies into `AllergyIntolerance` resources with RxNorm / SNOMED CT coding.
+  * Converts physician care recommendations into `ServiceRequest` proposals.
+  * Full provenance tagging (`nte-extracted`) ensures complete auditability back to specific HL7 segment lines.
 
 ---
 
@@ -145,6 +163,7 @@ When clinical data lacks essential semantic attributes, pure automation risks si
 | :--- | :--- | :--- | :--- |
 | **Backend Runtime** | Python | 3.12 / 3.14 | High-performance clinical data pipeline |
 | **API Framework** | FastAPI | 0.115+ | Async REST API with automatic OpenAPI documentation |
+| **Persistence (Memory)** | SQLite | 3.x (ACID) | Institutional Mapping Memory & learned rules database |
 | **Validation Models** | Pydantic v2 | 2.10+ | Strict type validation and schema serialization |
 | **HTTP Client** | HTTPX | 0.28+ | Async HTTP client for external FHIR server push |
 | **Web Server** | Uvicorn / Gunicorn | 0.34+ | ASGI production server |

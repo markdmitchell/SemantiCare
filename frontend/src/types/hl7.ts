@@ -96,6 +96,7 @@ export interface AmbiguityFlag {
   default_choice?: string;
   target_resource_id: string;
   target_property_path?: string;
+  source_key?: string;
   is_resolved?: boolean;
   resolved_value?: string;
   resolved_by?: string;
@@ -163,3 +164,17 @@ export interface ValidationResult {
   issues: ValidationIssue[];
   resource_results: Record<string, ResourceValidationResult>;
 }
+
+export interface MappingRule {
+  id: string;
+  facility: string;
+  rule_type: 'MISSING_UNIT' | 'LOCAL_TERMINOLOGY' | 'CUSTOM_Z_SEGMENT' | string;
+  source_key: string;
+  target_value: string;
+  target_display: string;
+  author: string;
+  created_at: string;
+  applied_count: number;
+  notes?: string;
+}
+

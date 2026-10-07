@@ -8,7 +8,7 @@ import type {
   HL7Field,
   AmbiguityFlag,
 } from './types/hl7';
-import { fetchSamples, parseHL7, mapHL7, validateFHIRBundle, fetchHealth } from './services/api';
+import { fetchSamples, parseHL7, mapHL7, validateFHIRBundle, fetchHealth, fetchMappingRules } from './services/api';
 import { Navbar } from './components/Navbar';
 import { SamplePickerBar } from './components/SamplePickerBar';
 import { HL7InputPanel } from './components/HL7InputPanel';
@@ -21,6 +21,7 @@ import { PHIAuditModal } from './components/PHIAuditModal';
 import { AmbiguityDetailModal } from './components/AmbiguityDetailModal';
 import { ExportModal } from './components/ExportModal';
 import { HowItWorksModal } from './components/HowItWorksModal';
+import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -44,7 +45,18 @@ export const App: React.FC = () => {
   const [selectedAmbiguity, setSelectedAmbiguity] = useState<AmbiguityFlag | null>(null);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false);
+  const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
+  const [rulesCount, setRulesCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const refreshRulesCount = async () => {
+    try {
+      const res = await fetchMappingRules();
+      setRulesCount(res.count || 0);
+    } catch (err) {
+      console.warn('Could not fetch rules count:', err);
+    }
+  };
 
   // Initialize and load default sample
   useEffect(() => {
@@ -56,6 +68,8 @@ export const App: React.FC = () => {
         console.warn('Backend not responding yet:', err);
         setBackendOnline(false);
       }
+
+      refreshRulesCount();
 
       try {
         const sampleList = await fetchSamples();
@@ -278,9 +292,11 @@ export const App: React.FC = () => {
         unresolvedAmbiguitiesCount={unresolvedAmbiguities.length}
         conformanceScore={validationResult?.conformance_score}
         canExport={!!mappingResult?.fhir_bundle}
+        rulesCount={rulesCount}
         onToggleMode={(mode) => setActiveMode(mode)}
         onOpenHowItWorks={() => setShowHowItWorks(true)}
         onOpenExport={() => setShowExportModal(true)}
+        onOpenRulesModal={() => setShowRulesModal(true)}
       />
 
       {/* Clinical Scenario Selector Bar */}
@@ -343,6 +359,10 @@ export const App: React.FC = () => {
               ambiguities={mappingResult?.ambiguities || []}
               onResolve={handleResolveAmbiguity}
               onResetResolutions={() => executePipeline(rawHL7)}
+              facility={parseResult?.metadata?.sending_facility || parseResult?.metadata?.receiving_facility || ''}
+              onRuleLearned={() => {
+                refreshRulesCount();
+              }}
             />
           ) : activeMode === 'validation' ? (
             <ValidationInspector
@@ -401,6 +421,16 @@ export const App: React.FC = () => {
 
       {showHowItWorks && (
         <HowItWorksModal onClose={() => setShowHowItWorks(false)} />
+      )}
+
+      {showRulesModal && (
+        <InstitutionalRulesModal
+          onClose={() => setShowRulesModal(false)}
+          onRulesUpdated={() => {
+            refreshRulesCount();
+            executePipeline(rawHL7);
+          }}
+        />
       )}
     </div>
   );

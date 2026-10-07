@@ -16,6 +16,8 @@ from app.terminology.loinc_catalog import (
     infer_missing_unit_candidates,
 )
 from app.security.phi_scrubber import TokenVault
+from app.rules.mapping_memory import mapping_memory
+from app.nlp.clinical_ner import extract_entities_from_nte
 
 
 def parse_hl7_datetime(hl7_ts: str) -> str:
@@ -108,7 +110,8 @@ class SemanticMapper:
     Employs deterministic mappings for base structures and semantic grounding for observations.
     """
 
-    def __init__(self):
+    def __init__(self, facility: str = ""):
+        self.facility = facility.strip().upper()
         self.patient_id = f"pat-{uuid.uuid4().hex[:8]}"
         self.patient_urn = f"urn:uuid:{self.patient_id}"
         self.encounter_id = f"enc-{uuid.uuid4().hex[:8]}"
@@ -437,34 +440,59 @@ class SemanticMapper:
                 display_name = obs_code_raw.strip()
 
             # Terminology Grounding
-            loinc_entry = lookup_loinc(parsed_code)
-            is_grounded = loinc_entry is not None
-
-            # If not grounded or local code (e.g. BP_LOCAL), attempt matching
-            matched_candidates = []
-            if not is_grounded:
-                matched_candidates = match_terminology(display_name or parsed_code)
-                if matched_candidates:
-                    top = matched_candidates[0]
-                    self.ambiguities.append({
-                        "id": f"amb-term-{obs_id}",
-                        "type": "LOCAL_TERMINOLOGY",
-                        "severity": "warning",
-                        "field_location": f"OBX-3 (Index {idx})",
-                        "title": f"Local Code '{parsed_code}' Grounded to LOINC",
-                        "message": f"Local test '{display_name}' mapped to LOINC {top['code']} ({top['display']}) with {int(top['confidence']*100)}% confidence.",
-                        "suggested_options": [f"{c['code']} - {c['display']}" for c in matched_candidates],
-                        "default_choice": f"{top['code']} - {top['display']}",
-                        "target_resource_id": obs_id,
-                    })
-                    parsed_code = top["code"]
-                    display_name = top["display"]
-                    self._record_confidence("medium")
-                else:
-                    self._record_confidence("low")
-            else:
-                display_name = loinc_entry["display"]
+            # 1. Check Institutional Rulebase (Mapping Memory)
+            rule = mapping_memory.find_matching_rule(self.facility, "LOCAL_TERMINOLOGY", parsed_code)
+            if rule:
+                parsed_code = rule.target_value
+                display_name = rule.target_display or display_name
+                mapping_memory.increment_usage(rule.id)
+                self.ambiguities.append({
+                    "id": f"amb-term-{obs_id}",
+                    "type": "LOCAL_TERMINOLOGY",
+                    "severity": "info",
+                    "field_location": f"OBX-3 (Index {idx})",
+                    "title": f"Local Code '{rule.source_key}' Auto-Resolved",
+                    "message": f"Auto-resolved to LOINC {rule.target_value} via institutional rule for facility '{rule.facility}' (Author: {rule.author}).",
+                    "suggested_options": [f"{rule.target_value} - {display_name}"],
+                    "default_choice": f"{rule.target_value} - {display_name}",
+                    "target_resource_id": obs_id,
+                    "is_resolved": True,
+                    "resolved_value": rule.target_value,
+                    "resolved_by": f"Institutional Rule ({rule.id})",
+                })
                 self._record_confidence("high")
+                is_grounded = True
+            else:
+                loinc_entry = lookup_loinc(parsed_code)
+                is_grounded = loinc_entry is not None
+
+                # If not grounded or local code, attempt fuzzy matching
+                matched_candidates = []
+                if not is_grounded:
+                    matched_candidates = match_terminology(display_name or parsed_code)
+                    if matched_candidates:
+                        top = matched_candidates[0]
+                        self.ambiguities.append({
+                            "id": f"amb-term-{obs_id}",
+                            "type": "LOCAL_TERMINOLOGY",
+                            "severity": "warning",
+                            "field_location": f"OBX-3 (Index {idx})",
+                            "title": f"Local Code '{parsed_code}' Grounded to LOINC",
+                            "message": f"Local test '{display_name}' mapped to LOINC {top['code']} ({top['display']}) with {int(top['confidence']*100)}% confidence.",
+                            "suggested_options": [f"{c['code']} - {c['display']}" for c in matched_candidates],
+                            "default_choice": f"{top['code']} - {top['display']}",
+                            "target_resource_id": obs_id,
+                            "source_key": obs_code_raw.split("^")[0].strip(),
+                            "is_resolved": False,
+                        })
+                        parsed_code = top["code"]
+                        display_name = top["display"]
+                        self._record_confidence("medium")
+                    else:
+                        self._record_confidence("low")
+                else:
+                    display_name = loinc_entry["display"]
+                    self._record_confidence("high")
 
             # Determine category: Vital Signs vs Laboratory
             category_code = "laboratory"
@@ -565,23 +593,46 @@ class SemanticMapper:
             # Handle Missing UCUM Unit
             unit_val = raw_units.strip()
             if not unit_val and value_type == "NM":
-                candidates = infer_missing_unit_candidates(display_name)
-                default_unit = candidates[0] if candidates else "1"
-                unit_val = default_unit
-                self.ambiguities.append({
-                    "id": f"amb-unit-{obs_id}",
-                    "type": "MISSING_UNIT",
-                    "severity": "action_required",
-                    "field_location": f"OBX-6 (Index {idx})",
-                    "title": f"Missing Unit for {display_name}",
-                    "message": f"Observation has value '{raw_val}' but OBX-6 unit is empty. Clinical informaticist verification required.",
-                    "suggested_options": candidates,
-                    "default_choice": default_unit,
-                    "target_resource_id": obs_id,
-                    "target_property_path": "valueQuantity.unit",
-                    "is_resolved": False,
-                })
-                self._record_confidence("low")
+                # Check Institutional Rulebase (Mapping Memory)
+                rule = mapping_memory.find_matching_rule(self.facility, "MISSING_UNIT", parsed_code)
+                if rule:
+                    unit_val = rule.target_value
+                    mapping_memory.increment_usage(rule.id)
+                    self.ambiguities.append({
+                        "id": f"amb-unit-{obs_id}",
+                        "type": "MISSING_UNIT",
+                        "severity": "info",
+                        "field_location": f"OBX-6 (Index {idx})",
+                        "title": f"Missing Unit for {display_name} Auto-Resolved",
+                        "message": f"Auto-resolved unit '{rule.target_value}' via institutional rule for facility '{rule.facility}' (Author: {rule.author}).",
+                        "suggested_options": [rule.target_value],
+                        "default_choice": rule.target_value,
+                        "target_resource_id": obs_id,
+                        "target_property_path": "valueQuantity.unit",
+                        "is_resolved": True,
+                        "resolved_value": rule.target_value,
+                        "resolved_by": f"Institutional Rule ({rule.id})",
+                    })
+                    self._record_confidence("high")
+                else:
+                    candidates = infer_missing_unit_candidates(display_name)
+                    default_unit = candidates[0] if candidates else "1"
+                    unit_val = default_unit
+                    self.ambiguities.append({
+                        "id": f"amb-unit-{obs_id}",
+                        "type": "MISSING_UNIT",
+                        "severity": "action_required",
+                        "field_location": f"OBX-6 (Index {idx})",
+                        "title": f"Missing Unit for {display_name}",
+                        "message": f"Observation has value '{raw_val}' but OBX-6 unit is empty. Clinical informaticist verification required.",
+                        "suggested_options": candidates,
+                        "default_choice": default_unit,
+                        "target_resource_id": obs_id,
+                        "target_property_path": "valueQuantity.unit",
+                        "source_key": parsed_code,
+                        "is_resolved": False,
+                    })
+                    self._record_confidence("low")
             elif unit_val and validate_ucum(unit_val):
                 self._record_confidence("high")
 
@@ -774,6 +825,12 @@ class SemanticMapper:
         """Assemble all generated FHIR resources into a standardized FHIR R4 Bundle."""
         segments = parsed_message.get("segments", [])
         msh_seg = next((s for s in segments if s["segment_id"] == "MSH"), None)
+        if msh_seg:
+            msh_fields = {f["field_index"]: f for f in msh_seg.get("fields", [])}
+            facility_val = msh_fields.get(4, {}).get("raw_value", "")
+            if facility_val:
+                self.facility = facility_val.strip().upper()
+
         pid_seg = next((s for s in segments if s["segment_id"] == "PID"), None)
         pv1_seg = next((s for s in segments if s["segment_id"] == "PV1"), None)
         nk1_segs = [s for s in segments if s["segment_id"] == "NK1"]
@@ -806,6 +863,26 @@ class SemanticMapper:
         cond_list, cov_list = self.map_conditions_and_coverage(dg1_segs, in1_segs)
         resources.extend(cond_list)
         resources.extend(cov_list)
+
+        # 5. Extract structured entities from unstructured NTE clinical notes (Clinical NLP)
+        for n_idx, nte in enumerate(nte_segs, start=1):
+            n_fields = {f["field_index"]: f for f in nte.get("fields", [])}
+            nte_comment = n_fields.get(3, {}).get("raw_value", "")
+            if nte_comment:
+                extracted_entities = extract_entities_from_nte(
+                    nte_comment,
+                    self.patient_urn,
+                    self.encounter_urn,
+                    source_seg_id=f"NTE-3 (Index {n_idx})",
+                )
+                for ent in extracted_entities:
+                    resources.append(ent.fhir_resource)
+                    self.lineage.append({
+                        "fhir_path": f"{ent.fhir_resource['resourceType']}[{ent.fhir_resource['id']}]",
+                        "hl7_source": f"NTE-3 (Index {n_idx})",
+                        "confidence": "high",
+                    })
+                    self._record_confidence("high")
 
         # Timestamp from MSH-7
         msh_ts = ""

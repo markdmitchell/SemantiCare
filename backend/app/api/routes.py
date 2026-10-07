@@ -315,3 +315,71 @@ async def push_bundle_to_fhir_server(payload: FHIRPushRequest):
         }
 
 
+# ==============================================================================
+# Phase 1.1: Institutional Mapping Memory & Rulebase Endpoints
+# ==============================================================================
+
+class CreateRuleRequest(BaseModel):
+    facility: str = Field(default="*", description="Sending facility identifier or '*' for global")
+    rule_type: str = Field(..., description="Rule type: MISSING_UNIT, LOCAL_TERMINOLOGY, or CUSTOM_Z_SEGMENT")
+    source_key: str = Field(..., description="Source code or analyte identifier (e.g. 'BP_LOCAL', '29463-7')")
+    target_value: str = Field(..., description="Standard code, unit, or mapping target (e.g. 'kg', '85354-9')")
+    target_display: str = Field(default="", description="Human-readable standard display name")
+    author: str = Field(default="Clinical Informaticist", description="Author or committee name")
+    notes: str = Field(default="", description="Governance or clinical rationale")
+
+
+@router.get("/rules")
+async def list_mapping_rules(facility: str | None = None):
+    """List institutional mapping rules, optionally filtered by facility."""
+    from app.rules.mapping_memory import mapping_memory
+    rules = mapping_memory.list_rules(facility=facility)
+    return {
+        "count": len(rules),
+        "facility_filter": facility,
+        "rules": [r.to_dict() for r in rules],
+    }
+
+
+@router.post("/rules")
+async def create_or_update_mapping_rule(payload: CreateRuleRequest):
+    """Create or update a persistent institutional mapping rule in SQLite."""
+    from app.rules.mapping_memory import mapping_memory
+    rule = mapping_memory.add_or_update_rule(
+        facility=payload.facility,
+        rule_type=payload.rule_type,
+        source_key=payload.source_key,
+        target_value=payload.target_value,
+        target_display=payload.target_display,
+        author=payload.author,
+        notes=payload.notes,
+    )
+    return {
+        "success": True,
+        "rule": rule.to_dict(),
+        "message": f"Rule '{rule.id}' saved successfully for facility '{rule.facility}'.",
+    }
+
+
+@router.delete("/rules/{rule_id}")
+async def delete_mapping_rule(rule_id: str):
+    """Delete an institutional mapping rule by ID."""
+    from app.rules.mapping_memory import mapping_memory
+    deleted = mapping_memory.delete_rule(rule_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found.")
+    return {
+        "success": True,
+        "deleted_id": rule_id,
+        "message": f"Rule '{rule_id}' deleted successfully.",
+    }
+
+
+@router.get("/rules/export")
+async def export_rules_concept_map():
+    """Export institutional mapping rules as an HL7 FHIR ConceptMap resource."""
+    from app.rules.mapping_memory import mapping_memory
+    return mapping_memory.export_concept_map()
+
+
+

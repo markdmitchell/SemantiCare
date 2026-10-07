@@ -11,21 +11,29 @@ import {
   Hash,
   Activity,
   Layers,
+  Database,
 } from 'lucide-react';
+import { saveMappingRule } from '../services/api';
 
 interface ResolutionDeckProps {
   ambiguities: AmbiguityFlag[];
   onResolve: (ambiguityId: string, resolvedValue: string) => void;
   onResetResolutions: () => void;
+  facility?: string;
+  onRuleLearned?: () => void;
 }
 
 export const ResolutionDeck: React.FC<ResolutionDeckProps> = ({
   ambiguities,
   onResolve,
   onResetResolutions,
+  facility,
+  onRuleLearned,
 }) => {
   const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
   const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
+  const [rememberRules, setRememberRules] = useState<Record<string, boolean>>({});
+  const [savedNotifications, setSavedNotifications] = useState<Record<string, string>>({});
 
   const unresolvedCount = ambiguities.filter((a) => !a.is_resolved).length;
   const resolvedCount = ambiguities.filter((a) => a.is_resolved).length;
@@ -34,11 +42,40 @@ export const ResolutionDeck: React.FC<ResolutionDeckProps> = ({
     setSelectedChoices((prev) => ({ ...prev, [ambId]: val }));
   };
 
-  const handleApplyResolution = (amb: AmbiguityFlag) => {
+  const handleApplyResolution = async (amb: AmbiguityFlag) => {
     const custom = customInputs[amb.id]?.trim();
     const chosen = custom || selectedChoices[amb.id] || amb.default_choice || amb.suggested_options?.[0] || 'Confirmed';
+    
+    // Check if user requested saving this resolution to persistent Mapping Memory
+    if (rememberRules[amb.id] !== false && (amb.type === 'MISSING_UNIT' || amb.type === 'LOCAL_TERMINOLOGY')) {
+      try {
+        const sourceKey = amb.source_key || (amb.type === 'LOCAL_TERMINOLOGY' ? amb.title.match(/'([^']+)'/)?.[1] || amb.field_location : amb.field_location);
+        let targetVal = chosen;
+        let targetDisplay = '';
+        if (chosen.includes(' - ')) {
+          const parts = chosen.split(' - ');
+          targetVal = parts[0].trim();
+          targetDisplay = parts.slice(1).join(' - ').trim();
+        }
+        await saveMappingRule({
+          facility: facility || '*',
+          rule_type: amb.type,
+          source_key: sourceKey,
+          target_value: targetVal,
+          target_display: targetDisplay,
+          author: 'Clinical Informaticist (HITL Resolution)',
+          notes: `Persisted from Resolution Deck review for ${facility || 'Global'} on ${new Date().toLocaleDateString()}`,
+        });
+        setSavedNotifications((prev) => ({ ...prev, [amb.id]: `Saved to Mapping Memory (${facility || '*'})` }));
+        if (onRuleLearned) onRuleLearned();
+      } catch (e) {
+        console.error('Failed to persist rule to Mapping Memory:', e);
+      }
+    }
+
     onResolve(amb.id, chosen);
   };
+
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -150,7 +187,7 @@ export const ResolutionDeck: React.FC<ResolutionDeckProps> = ({
                     {isResolved ? (
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                        Verified by Informaticist
+                        {amb.resolved_by || 'Verified by Informaticist'}
                       </span>
                     ) : (
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 flex items-center gap-1">
@@ -173,6 +210,11 @@ export const ResolutionDeck: React.FC<ResolutionDeckProps> = ({
                         <code className="text-emerald-300 font-mono font-bold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
                           {amb.resolved_value}
                         </code>
+                        {amb.resolved_by && (
+                          <span className="text-[10px] text-emerald-400/80 italic">
+                            ({amb.resolved_by})
+                          </span>
+                        )}
                       </div>
                       <button
                         onClick={() => onResolve(amb.id, '')}
@@ -244,14 +286,42 @@ export const ResolutionDeck: React.FC<ResolutionDeckProps> = ({
                       )}
 
                       {/* Apply Resolution Action Bar */}
-                      <div className="flex justify-end pt-1">
-                        <button
-                          onClick={() => handleApplyResolution(amb)}
-                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-950/50 transition active:scale-[0.98]"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Apply & Update FHIR Resource</span>
-                        </button>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                        {(amb.type === 'MISSING_UNIT' || amb.type === 'LOCAL_TERMINOLOGY') ? (
+                          <label className="flex items-center gap-2 select-none cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={rememberRules[amb.id] !== false}
+                              onChange={(e) =>
+                                setRememberRules((prev) => ({ ...prev, [amb.id]: e.target.checked }))
+                              }
+                              className="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 w-3.5 h-3.5"
+                            />
+                            <span className="flex items-center gap-1.5 text-xs text-slate-300">
+                              <Database className="w-3 h-3 text-emerald-400" />
+                              <span>Remember in Mapping Memory for </span>
+                              <span className="font-semibold text-emerald-300 font-mono">
+                                {facility || '* (Global)'}
+                              </span>
+                            </span>
+                          </label>
+                        ) : <div />}
+
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          {savedNotifications[amb.id] && (
+                            <span className="text-[11px] text-emerald-400 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {savedNotifications[amb.id]}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleApplyResolution(amb)}
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-950/50 transition active:scale-[0.98]"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Apply & Update FHIR Resource</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

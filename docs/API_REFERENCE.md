@@ -455,3 +455,136 @@ curl -X POST "http://localhost:8000/api/fhir/push" \
        "fhir_server_url": "https://hapi.fhir.org/baseR4"
      }'
 ```
+
+---
+
+## 5. Institutional Mapping Memory & Rulebase Endpoints (v1.1)
+
+### 5.1. List Mapping Rules
+`GET /api/rules`
+
+Retrieves all institutional mapping rules from SQLite, optionally filtered by sending facility.
+
+#### Query Parameters
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `facility` | string | No | Filter by facility code (e.g. `METRO_HEALTH`). Rules with global facility `*` are always included. |
+
+#### Response (`200 OK`)
+```json
+{
+  "count": 3,
+  "facility_filter": "METRO_HEALTH",
+  "rules": [
+    {
+      "id": "rule-f7db293e",
+      "facility": "METRO_HEALTH",
+      "rule_type": "LOCAL_TERMINOLOGY",
+      "source_key": "BP_LOCAL",
+      "target_value": "85354-9",
+      "target_display": "Blood pressure panel with all children optional",
+      "author": "Clinical Informatics Governance",
+      "created_at": "2026-10-06T20:00:00Z",
+      "applied_count": 5,
+      "notes": "Philips bedside telemetry default"
+    }
+  ]
+}
+```
+
+---
+
+### 5.2. Create or Update Mapping Rule
+`POST /api/rules`
+
+Persists an institutional mapping rule into the SQLite repository. If a rule with the same `(facility, rule_type, source_key)` exists, it updates the existing entry.
+
+#### Request Body
+```json
+{
+  "facility": "METRO_HEALTH",
+  "rule_type": "MISSING_UNIT",
+  "source_key": "29463-7",
+  "target_value": "kg",
+  "target_display": "Kilograms (kg)",
+  "author": "Dr. Sarah Chen, Informatics Lead",
+  "notes": "Inpatient smart-scale calibration standard"
+}
+```
+
+#### Response (`200 OK`)
+```json
+{
+  "success": true,
+  "rule": {
+    "id": "rule-64ebf331",
+    "facility": "METRO_HEALTH",
+    "rule_type": "MISSING_UNIT",
+    "source_key": "29463-7",
+    "target_value": "kg",
+    "target_display": "Kilograms (kg)",
+    "author": "Dr. Sarah Chen, Informatics Lead",
+    "created_at": "2026-10-06T20:15:00Z",
+    "applied_count": 0,
+    "notes": "Inpatient smart-scale calibration standard"
+  },
+  "message": "Rule 'rule-64ebf331' saved successfully for facility 'METRO_HEALTH'."
+}
+```
+
+---
+
+### 5.3. Delete Mapping Rule
+`DELETE /api/rules/{rule_id}`
+
+Deletes an institutional rule by unique identifier.
+
+#### Response (`200 OK`)
+```json
+{
+  "success": true,
+  "deleted_id": "rule-64ebf331",
+  "message": "Rule 'rule-64ebf331' deleted successfully."
+}
+```
+
+---
+
+### 5.4. Export FHIR ConceptMap
+`GET /api/rules/export`
+
+Exports all persistent institutional terminology rules as an HL7 FHIR R4 `ConceptMap` resource JSON suitable for hospital integration.
+
+#### Response (`200 OK`)
+```json
+{
+  "resourceType": "ConceptMap",
+  "id": "semanticare-institutional-rules",
+  "title": "SemantiCare Institutional Terminology ConceptMap",
+  "status": "active",
+  "date": "2026-10-06",
+  "publisher": "SemantiCare Clinical Informatics",
+  "sourceUri": "http://example.org/fhir/ValueSet/local-hospital-codes",
+  "targetUri": "http://loinc.org/vs",
+  "group": [
+    {
+      "source": "http://example.org/codes/hospital-local",
+      "target": "http://loinc.org",
+      "element": [
+        {
+          "code": "BP_LOCAL",
+          "target": [
+            {
+              "code": "85354-9",
+              "display": "Blood pressure panel with all children optional",
+              "equivalence": "equivalent",
+              "comment": "Institutional rule for facility: METRO_HEALTH. Author: Clinical Informatics Governance"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
