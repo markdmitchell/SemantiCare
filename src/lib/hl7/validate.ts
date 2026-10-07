@@ -27,9 +27,6 @@ export function validateBundle(b: Bundle): Issue[] {
     const req = (path: string, v: unknown, rule: string) => {
       if (v === undefined || v === null || (Array.isArray(v) && !v.length)) push("error", path, `${path} is required (min 1)`, rule);
     };
-    const ref = (path: string, v: any, rule: string) => {
-      if (v?.reference && !urls.has(v.reference)) push("error", path, `Reference ${v.reference} does not resolve within the Bundle`, rule);
-    };
     const profile = r.meta?.profile?.[0] as string | undefined;
     if (!profile) push("warning", "meta.profile", "No US Core profile declared", "us-core");
     const code = (path: string, cc: any, rule: string, sev: Severity = "error") => {
@@ -72,7 +69,6 @@ export function validateBundle(b: Bundle): Issue[] {
         req("class", r.class, rule);
         req("type", r.type, rule);
         req("subject", r.subject, rule);
-        ref("subject", r.subject, rule);
         if (r.status === "unknown") push("warning", "status", "Encounter status could not be derived from trigger event", rule);
         if (r.period?.start && !DATETIME.test(r.period.start)) push("error", "period.start", "Invalid dateTime", rule);
         break;
@@ -86,7 +82,6 @@ export function validateBundle(b: Bundle): Issue[] {
         req("code", r.code, rule);
         code("code", r.code, rule);
         req("subject", r.subject, rule);
-        ref("subject", r.subject, rule);
         if (!r.effectiveDateTime && !r.effectivePeriod) push("error", "effective[x]", "us-core-2: effective[x] SHALL be present if status is final", rule);
         else if (r.effectiveDateTime && !DATETIME.test(r.effectiveDateTime)) push("error", "effectiveDateTime", "Invalid dateTime", rule);
         const hasValue = Object.keys(r).some((k) => k.startsWith("value"));
@@ -107,11 +102,9 @@ export function validateBundle(b: Bundle): Issue[] {
         req("code", r.code, rule);
         code("code", r.code, rule, "warning");
         req("subject", r.subject, rule);
-        ref("subject", r.subject, rule);
         if (!r.effectiveDateTime) push("error", "effective[x]", "effective[x] is required", rule);
         req("issued", r.issued, rule);
         if (r.issued && !INSTANT.test(r.issued)) push("error", "issued", "issued must be an instant with timezone", rule);
-        r.result?.forEach((x: any, i: number) => ref(`result[${i}]`, x, rule));
         break;
       }
       case "DocumentReference": {
@@ -121,7 +114,6 @@ export function validateBundle(b: Bundle): Issue[] {
         code("type", r.type, rule);
         req("category", r.category, rule);
         req("subject", r.subject, rule);
-        ref("subject", r.subject, rule);
         req("content", r.content, rule);
         r.content?.forEach((c: any, i: number) => {
           if (!c.attachment?.contentType) push("error", `content[${i}].attachment.contentType`, "us-core-6: contentType required", rule);
