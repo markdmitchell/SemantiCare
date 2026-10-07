@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- The HL7→FHIR pipeline lives in pure, client-side modules under `src/lib/hl7/` (parse → scrub → ground → build → validate); UI panels only consume their outputs — keeps PHI in the browser and logic testable.
+- The PHI vault uses random tokens, so the pipeline renders only after mount — avoids SSR hydration mismatches.
