@@ -472,3 +472,118 @@ export async function exportRulesConceptMap(): Promise<any> {
 
   return exportRulesConceptMapJson();
 }
+
+export interface BatchMapResultItem {
+  message_index: number;
+  success: boolean;
+  bundle_id?: string;
+  total_resources?: number;
+  confidence_score?: number;
+  ambiguities_count?: number;
+  fhir_bundle?: any;
+  raw_message?: string;
+  error?: string;
+}
+
+export interface BatchMapResponse {
+  success: boolean;
+  total_messages: number;
+  successful_messages: number;
+  aggregate_metrics: {
+    total_resources_generated: number;
+    total_ambiguities_flagged: number;
+    total_phi_redactions: number;
+    average_confidence_score: number;
+  };
+  results: BatchMapResultItem[];
+}
+
+export async function batchMapHL7(
+  messages: string[],
+  enable_phi_scrubbing: boolean = true
+): Promise<BatchMapResponse> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${API_BASE}/batch/map`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, enable_phi_scrubbing }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        data.results = (data.results || []).map((r: any, idx: number) => ({
+          ...r,
+          raw_message: messages[idx] || '',
+        }));
+        return data;
+      }
+    } catch {
+      // Fall back to in-browser execution
+    }
+  }
+
+  // Standalone browser batch mapping
+  const results: BatchMapResultItem[] = [];
+  let totalResources = 0;
+  let totalAmbiguities = 0;
+  let totalRedactions = 0;
+  let confidenceSum = 0;
+
+  for (let idx = 0; idx < messages.length; idx++) {
+    const rawMsg = messages[idx].trim();
+    if (!rawMsg) continue;
+    try {
+      const mRes = processSingleHl7Message(rawMsg, enable_phi_scrubbing);
+      if (mRes.success) {
+        totalResources += mRes.total_resources || 0;
+        totalAmbiguities += mRes.ambiguities?.length || 0;
+        totalRedactions += mRes.phi_audit?.total_redactions || 0;
+        confidenceSum += mRes.confidence_score || 0;
+        results.push({
+          message_index: idx,
+          success: true,
+          bundle_id: mRes.fhir_bundle?.id,
+          total_resources: mRes.total_resources || 0,
+          confidence_score: mRes.confidence_score || 0,
+          ambiguities_count: mRes.ambiguities?.length || 0,
+          fhir_bundle: mRes.fhir_bundle,
+          raw_message: rawMsg,
+        });
+      } else {
+        results.push({
+          message_index: idx,
+          success: false,
+          raw_message: rawMsg,
+          error: mRes.error || 'Parsing error',
+        });
+      }
+    } catch (e: any) {
+      results.push({
+        message_index: idx,
+        success: false,
+        raw_message: rawMsg,
+        error: String(e?.message ?? e),
+      });
+    }
+  }
+
+  const numSuccessful = results.filter((r) => r.success).length;
+  const avgConfidence = numSuccessful > 0 ? Math.round(confidenceSum / numSuccessful) : 0;
+
+  return {
+    success: true,
+    total_messages: messages.length,
+    successful_messages: numSuccessful,
+    aggregate_metrics: {
+      total_resources_generated: totalResources,
+      total_ambiguities_flagged: totalAmbiguities,
+      total_phi_redactions: totalRedactions,
+      average_confidence_score: avgConfidence,
+    },
+    results,
+  };
+}

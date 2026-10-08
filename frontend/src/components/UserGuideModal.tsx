@@ -186,6 +186,37 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Enterprise Productivity Features (v1.2) */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-slate-900">Enterprise Productivity & Diagnostic Tools (v1.2)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3.5 bg-sky-50/40 border border-sky-200/80 rounded-lg space-y-1">
+                    <span className="font-semibold text-sky-950 block">HL7 v2 Specification Linter</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Instant syntax validator checking delimiters, mandatory MSH fields (MSH-9, MSH-10), PID identifiers, and OBX UCUM units with actionable clinical guidance.
+                    </p>
+                  </div>
+                  <div className="p-3.5 bg-indigo-50/40 border border-indigo-200/80 rounded-lg space-y-1">
+                    <span className="font-semibold text-indigo-950 block">Multi-Message Batch Studio</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Process high-volume HL7 message cohorts, monitor real-time throughput metrics, and stream export standard Bulk FHIR NDJSON (<code className="font-mono">.ndjson</code>).
+                    </p>
+                  </div>
+                  <div className="p-3.5 bg-emerald-50/40 border border-emerald-200/80 rounded-lg space-y-1">
+                    <span className="font-semibold text-emerald-950 block">Provenance & Topology Tree</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Visual directed graph linking each clinical artifact to its parent Encounter and Patient subject, highlighting abnormal test values and clinical status.
+                    </p>
+                  </div>
+                  <div className="p-3.5 bg-purple-50/40 border border-purple-200/80 rounded-lg space-y-1">
+                    <span className="font-semibold text-purple-950 block">Developer API Snippets</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Pre-generated cURL, Python (httpx), and TypeScript client code ready to paste into Mirth Connect, Rhapsody, AWS HealthLake, or Google Cloud Healthcare pipelines.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

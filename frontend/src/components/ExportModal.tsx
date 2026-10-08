@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Terminal,
 } from 'lucide-react';
 
 interface ExportModalProps {
@@ -39,6 +40,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ mappingResult, onClose
     message?: string;
     details?: string;
   } | null>(null);
+
+  // Developer Integration Snippets state
+  const [showSnippets, setShowSnippets] = useState(false);
+  const [snippetTab, setSnippetTab] = useState<'curl' | 'python' | 'ts' | 'push'>('curl');
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const activeBundle =
     flavor === 'rehydrated'
@@ -106,6 +112,59 @@ export const ExportModal: React.FC<ExportModalProps> = ({ mappingResult, onClose
     } finally {
       setIsPushing(false);
     }
+  };
+
+  const getSnippetContent = (): string => {
+    switch (snippetTab) {
+      case 'curl':
+        return `# 1. POST HL7 v2 Message to SemantiCare
+curl -X POST "http://127.0.0.1:8000/api/v1/map" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "raw_hl7": "MSH|^~\\\\&|EPIC|HOSPITAL|LAB|LAB|20261007120000||ADT^A01|MSG001|P|2.5.1\\rPID|1||MRN12345||DOE^JOHN||19800101|M",
+    "enable_phi_scrubbing": ${flavor === 'deidentified'}
+  }'`;
+      case 'python':
+        return `import httpx
+
+url = "http://127.0.0.1:8000/api/v1/map"
+payload = {
+    "raw_hl7": "MSH|^~\\\\&|EPIC|HOSPITAL|LAB|LAB|20261007120000||ADT^A01|MSG001|P|2.5.1\\rPID|1||MRN12345||DOE^JOHN||19800101|M",
+    "enable_phi_scrubbing": ${flavor === 'deidentified' ? 'True' : 'False'}
+}
+
+with httpx.Client(timeout=30.0) as client:
+    response = client.post(url, json=payload)
+    result = response.json()
+    bundle = result.get("fhir_bundle")
+    print(f"Mapped {result.get('total_resources')} resources with {result.get('confidence_score')}% confidence.")`;
+      case 'ts':
+        return `// Call SemantiCare Hybrid Engine
+const response = await fetch("http://127.0.0.1:8000/api/v1/map", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    raw_hl7: "MSH|^~\\\\&|EPIC|HOSPITAL|LAB|LAB|20261007120000||ADT^A01|MSG001|P|2.5.1\\rPID|1||MRN12345||DOE^JOHN||19800101|M",
+    enable_phi_scrubbing: ${flavor === 'deidentified'}
+  })
+});
+
+const data = await response.json();
+console.log("Bundle ID:", data.fhir_bundle?.id);
+console.log("Generated Resources:", data.total_resources);`;
+      case 'push':
+        return `# Transmit FHIR R4 Bundle to Server
+curl -X POST "${fhirServerUrl.trim() || 'https://hapi.fhir.org/baseR4'}" \\
+  -H "Content-Type: application/fhir+json" \\
+  -H "Accept: application/fhir+json" \\
+  ${authToken ? `-H "Authorization: Bearer ${authToken.trim()}" \\\n  ` : ''}-d @${fileName}`;
+    }
+  };
+
+  const handleCopySnippet = () => {
+    navigator.clipboard.writeText(getSnippetContent());
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
 
@@ -325,6 +384,95 @@ export const ExportModal: React.FC<ExportModalProps> = ({ mappingResult, onClose
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* Step 5: Developer API & Integration Snippets */}
+          <div className="border border-slate-200 bg-slate-50/60 rounded-xl p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-purple-600" />
+                <span className="font-semibold text-slate-700 text-xs">
+                  Developer Integration & API Code Snippets
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSnippets(!showSnippets)}
+                className="text-[11px] text-sky-600 hover:text-sky-700 font-medium cursor-pointer"
+              >
+                {showSnippets ? 'Hide' : 'Show Snippets'}
+              </button>
+            </div>
+
+            {showSnippets && (
+              <div className="space-y-2.5 pt-1 text-xs animate-in fade-in">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setSnippetTab('curl')}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-medium transition cursor-pointer ${
+                        snippetTab === 'curl'
+                          ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      cURL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSnippetTab('python')}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-medium transition cursor-pointer ${
+                        snippetTab === 'python'
+                          ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      Python
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSnippetTab('ts')}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-medium transition cursor-pointer ${
+                        snippetTab === 'ts'
+                          ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      TypeScript
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSnippetTab('push')}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-medium transition cursor-pointer ${
+                        snippetTab === 'push'
+                          ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      FHIR Push
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopySnippet}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] transition cursor-pointer"
+                  >
+                    {copiedSnippet ? (
+                      <Check className="w-3 h-3 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-slate-400" />
+                    )}
+                    <span>{copiedSnippet ? 'Copied' : 'Copy Snippet'}</span>
+                  </button>
+                </div>
+
+                <pre className="p-3 bg-slate-900 rounded-lg text-sky-300 font-mono text-[11px] overflow-x-auto whitespace-pre border border-slate-800 leading-relaxed select-all">
+                  {getSnippetContent()}
+                </pre>
               </div>
             )}
           </div>

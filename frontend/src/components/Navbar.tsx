@@ -25,6 +25,7 @@ interface NavbarProps {
   onOpenRulesModal: () => void;
   onOpenUserGuide: () => void;
   onOpenEngineModal?: () => void;
+  onOpenBatchModal?: () => void;
 }
 
 const sampleIcon = (category: string) => {
@@ -38,7 +39,7 @@ const sampleIcon = (category: string) => {
 export const Navbar: React.FC<NavbarProps> = ({
   backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
   canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
-  onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal,
+  onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal, onOpenBatchModal,
 }) => {
   const tab = (mode: Mode, icon: React.ReactNode, label: string, extra?: React.ReactNode) => (
     <button
@@ -75,6 +76,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </div>
         <div className="flex items-center gap-1 text-xs">
+          {onOpenBatchModal && (
+            <button onClick={onOpenBatchModal} className={ghost} title="Enterprise Multi-Message Batch Studio & NDJSON">
+              <Layers className="w-3.5 h-3.5 text-sky-600" />
+              <span className="hidden sm:inline">Batch Studio</span>
+            </button>
+          )}
           <button onClick={onOpenRulesModal} className={ghost} title="Institutional mapping memory">
             <Database className="w-3.5 h-3.5" /><span className="hidden sm:inline">Memory</span>
             {rulesCount > 0 && <span className="px-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-mono font-bold">{rulesCount}</span>}

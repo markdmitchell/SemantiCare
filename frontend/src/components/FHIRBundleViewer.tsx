@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { MapHL7Response, AmbiguityFlag } from '../types/hl7';
 import Editor, { DiffEditor } from '@monaco-editor/react';
 import {
@@ -20,6 +20,7 @@ import {
   RotateCcw,
   Search,
   GitCompare,
+  Workflow,
   X,
 } from 'lucide-react';
 
@@ -38,7 +39,7 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
   onOpenResolutionDeck,
   onDirectJsonEdit,
 }) => {
-  const [viewMode, setViewMode] = useState<'cards' | 'json' | 'diff'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'json' | 'diff' | 'tree'>('cards');
   const [useRehydrated, setUseRehydrated] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [selectedResourceType, setSelectedResourceType] = useState<string>('ALL');
@@ -53,6 +54,40 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
 
   const entries: any[] = currentBundle?.entry || [];
   const resourceConfidences = mappingResult.resource_confidences || {};
+
+  // Build Provenance & Topology Hierarchy Tree
+  const topology = useMemo(() => {
+    const patientEntry = entries.find((e) => e.resource?.resourceType === 'Patient');
+    const encounterEntries = entries.filter((e) => e.resource?.resourceType === 'Encounter');
+    const diagnosticEntries = entries.filter((e) => e.resource?.resourceType === 'DiagnosticReport');
+    const observationEntries = entries.filter((e) => e.resource?.resourceType === 'Observation');
+    const conditionEntries = entries.filter((e) => e.resource?.resourceType === 'Condition');
+    const serviceRequestEntries = entries.filter((e) => e.resource?.resourceType === 'ServiceRequest');
+    const coverageEntries = entries.filter((e) => e.resource?.resourceType === 'Coverage');
+    const otherEntries = entries.filter(
+      (e) =>
+        ![
+          'Patient',
+          'Encounter',
+          'DiagnosticReport',
+          'Observation',
+          'Condition',
+          'ServiceRequest',
+          'Coverage',
+        ].includes(e.resource?.resourceType)
+    );
+
+    return {
+      patient: patientEntry?.resource,
+      encounters: encounterEntries.map((e) => e.resource),
+      diagnosticReports: diagnosticEntries.map((e) => e.resource),
+      observations: observationEntries.map((e) => e.resource),
+      conditions: conditionEntries.map((e) => e.resource),
+      serviceRequests: serviceRequestEntries.map((e) => e.resource),
+      coverages: coverageEntries.map((e) => e.resource),
+      others: otherEntries.map((e) => e.resource),
+    };
+  }, [entries]);
 
   // Keep JSON text synced with currentBundle
   React.useEffect(() => {
@@ -270,6 +305,18 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
             >
               <GitCompare className="w-3.5 h-3.5" />
               <span>Token Diff</span>
+            </button>
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
+                viewMode === 'tree'
+                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              title="Interactive clinical resource hierarchy and provenance tree"
+            >
+              <Workflow className="w-3.5 h-3.5" />
+              <span>Provenance Tree</span>
             </button>
           </div>
         </div>
@@ -656,6 +703,314 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
                   scrollBeyondLastLine: false,
                 }}
               />
+            </div>
+          </div>
+        ) : viewMode === 'tree' ? (
+          /* Provenance & Topology Hierarchy Tree */
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/70">
+            {/* Context Header */}
+            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <Workflow className="w-4 h-4 text-sky-600" />
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800">
+                    Clinical Topology & Resource Provenance Graph
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Hierarchical reference graph linking clinical records to Patient, Encounter, and Service contexts
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
+                {entries.length} Resources Mapped
+              </span>
+            </div>
+
+            {/* Tree Container */}
+            <div className="space-y-4">
+              {/* Level 0: Patient Root */}
+              {topology.patient ? (
+                <div className="bg-white rounded-xl border border-purple-200/80 p-3.5 shadow-xs space-y-3">
+                  <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-purple-900">
+                            Patient (Root Subject)
+                          </span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                            id: {topology.patient.id}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-800 mt-0.5">
+                          {topology.patient.name?.[0]?.family}, {topology.patient.name?.[0]?.given?.join(' ')}
+                          {topology.patient.gender && (
+                            <span className="ml-2 font-normal text-slate-500 capitalize text-[11px]">
+                              • {topology.patient.gender}
+                            </span>
+                          )}
+                          {topology.patient.birthDate && (
+                            <span className="ml-1.5 font-mono text-slate-500 text-[11px]">
+                              • DOB: {topology.patient.birthDate}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => handleCopySingleResource(topology.patient, e)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] text-slate-500 hover:text-slate-800 bg-slate-50 border border-slate-200 transition cursor-pointer"
+                        title="Copy Patient JSON"
+                      >
+                        {copiedResourceId === topology.patient.id ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-slate-400" />
+                        )}
+                        <span className="text-[10px]">JSON</span>
+                      </button>
+                      {getConfidenceBadge(topology.patient.id)}
+                    </div>
+                  </div>
+
+                  {/* Level 1: Encounters & Coverage Branching from Patient */}
+                  <div className="pl-4 ml-3 border-l-2 border-slate-300 space-y-4">
+                    {/* Encounters */}
+                    {topology.encounters.map((enc: any, encIdx: number) => (
+                      <div key={encIdx} className="bg-slate-50/90 rounded-xl border border-indigo-200/80 p-3 space-y-3">
+                        <div className="flex items-start justify-between gap-2 border-b border-indigo-100 pb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              <Activity className="w-3.5 h-3.5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-xs text-indigo-950">
+                                  Encounter ({enc.class?.code || 'Clinical Encounter'})
+                                </span>
+                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  id: {enc.id}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-600 mt-0.5">
+                                Status: <span className="font-medium capitalize">{enc.status}</span>
+                                {enc.period?.start && (
+                                  <span className="ml-2 font-mono text-slate-500">
+                                    Period: {enc.period.start.slice(0, 16).replace('T', ' ')}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => handleCopySingleResource(enc, e)}
+                              className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] text-slate-500 hover:text-slate-800 bg-white border border-slate-200 transition cursor-pointer"
+                            >
+                              {copiedResourceId === enc.id ? (
+                                <Check className="w-3 h-3 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3 h-3 text-slate-400" />
+                              )}
+                              <span className="text-[10px]">JSON</span>
+                            </button>
+                            {getConfidenceBadge(enc.id)}
+                          </div>
+                        </div>
+
+                        {/* Level 2: Children under this Encounter (DiagnosticReport, Observations, Conditions, Orders) */}
+                        <div className="pl-4 ml-2 border-l-2 border-indigo-200 space-y-3">
+                          {/* DiagnosticReports */}
+                          {topology.diagnosticReports.map((dr: any, drIdx: number) => (
+                            <div key={drIdx} className="bg-white rounded-lg border border-sky-200 p-2.5 space-y-2">
+                              <div className="flex items-center justify-between gap-2 border-b border-sky-100 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                  <ClipboardList className="w-3.5 h-3.5 text-sky-600" />
+                                  <span className="font-semibold text-xs text-sky-950">
+                                    {dr.code?.text || dr.code?.coding?.[0]?.display || 'Diagnostic Report'}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    id: {dr.id}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={(e) => handleCopySingleResource(dr, e)}
+                                  className="text-slate-400 hover:text-slate-700 p-0.5"
+                                  title="Copy JSON"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              {/* Observations nested under DiagnosticReport */}
+                              {topology.observations.length > 0 && (
+                                <div className="space-y-1.5 pl-2">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    Associated Observations ({topology.observations.length})
+                                  </span>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {topology.observations.map((obs: any, obsIdx: number) => {
+                                      const isAbnormal = obs.interpretation?.[0]?.coding?.[0]?.code &&
+                                        ['H', 'L', 'A', 'PANIC', 'CRIT'].includes(obs.interpretation[0].coding[0].code.toUpperCase());
+                                      return (
+                                        <div
+                                          key={obsIdx}
+                                          className={`p-2 rounded border text-xs flex items-center justify-between gap-2 ${
+                                            isAbnormal
+                                              ? 'bg-rose-50/60 border-rose-200 text-rose-950'
+                                              : 'bg-slate-50/70 border-slate-200 text-slate-800'
+                                          }`}
+                                        >
+                                          <div className="min-w-0">
+                                            <p className="font-semibold truncate text-[11px]">
+                                              {obs.code?.text || obs.code?.coding?.[0]?.display || 'Observation'}
+                                            </p>
+                                            <p className="font-mono text-[11px] font-bold text-sky-800 mt-0.5">
+                                              {obs.valueQuantity ? (
+                                                <>
+                                                  {obs.valueQuantity.value} {obs.valueQuantity.unit}
+                                                </>
+                                              ) : obs.valueString ? (
+                                                obs.valueString
+                                              ) : (
+                                                'Reported'
+                                              )}
+                                              {isAbnormal && (
+                                                <span className="ml-1.5 px-1 py-0.2 rounded bg-rose-100 text-rose-800 font-bold text-[9px]">
+                                                  {obs.interpretation[0].coding[0].code}
+                                                </span>
+                                              )}
+                                            </p>
+                                          </div>
+                                          <button
+                                            onClick={(e) => handleCopySingleResource(obs, e)}
+                                            className="text-slate-400 hover:text-slate-700 p-0.5 shrink-0"
+                                            title="Copy Observation JSON"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {/* Conditions / Diagnoses */}
+                          {topology.conditions.length > 0 && (
+                            <div className="space-y-1.5">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                Diagnoses & Conditions ({topology.conditions.length})
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {topology.conditions.map((cond: any, condIdx: number) => (
+                                  <div
+                                    key={condIdx}
+                                    className="p-2 rounded-lg bg-amber-50/40 border border-amber-200/80 text-xs flex items-center justify-between gap-2"
+                                  >
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <Stethoscope className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                        <span className="font-semibold text-slate-900 truncate text-[11px]">
+                                          {cond.code?.text || cond.code?.coding?.[0]?.display || 'Condition'}
+                                        </span>
+                                      </div>
+                                      <p className="font-mono text-[10px] text-amber-800 mt-0.5 pl-5">
+                                        {cond.code?.coding?.[0]?.system?.includes('icd-10') ? 'ICD-10: ' : ''}
+                                        {cond.code?.coding?.[0]?.code}
+                                        {cond.clinicalStatus?.coding?.[0]?.code && (
+                                          <span className="ml-2 font-sans font-medium text-slate-500">
+                                            ({cond.clinicalStatus.coding[0].code})
+                                          </span>
+                                        )}
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => handleCopySingleResource(cond, e)}
+                                      className="text-slate-400 hover:text-slate-700 p-0.5 shrink-0"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Service Requests */}
+                          {topology.serviceRequests.length > 0 && (
+                            <div className="space-y-1.5">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                Service Requests / Orders ({topology.serviceRequests.length})
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {topology.serviceRequests.map((sr: any, srIdx: number) => (
+                                  <div
+                                    key={srIdx}
+                                    className="p-2 rounded-lg bg-sky-50/40 border border-sky-200 text-xs flex items-center justify-between gap-2"
+                                  >
+                                    <div className="min-w-0">
+                                      <span className="font-semibold text-slate-900 truncate text-[11px]">
+                                        {sr.code?.text || sr.code?.coding?.[0]?.display || 'Service Request'}
+                                      </span>
+                                      <p className="text-[10px] text-slate-500 mt-0.5">
+                                        Intent: <span className="font-medium capitalize">{sr.intent}</span> • Priority: <span className="font-medium capitalize">{sr.priority || 'routine'}</span>
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => handleCopySingleResource(sr, e)}
+                                      className="text-slate-400 hover:text-slate-700 p-0.5 shrink-0"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Coverage */}
+                    {topology.coverages.map((cov: any, covIdx: number) => (
+                      <div key={covIdx} className="bg-teal-50/50 rounded-xl border border-teal-200 p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1 rounded bg-teal-100 text-teal-800">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-xs text-teal-950">
+                              Coverage & Health Plan: {cov.payor?.[0]?.display || 'Insurance Policy'}
+                            </span>
+                            <p className="text-[11px] font-mono text-slate-600 mt-0.5">
+                              Policy ID: {cov.subscriberId} • Status: {cov.status}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => handleCopySingleResource(cov, e)}
+                          className="text-slate-400 hover:text-slate-700 p-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500 text-xs">
+                  No Patient resource detected in current bundle.
+                </div>
+              )}
             </div>
           </div>
         ) : (

@@ -170,6 +170,24 @@ Comprehensive technical, clinical, and operational documentation is available in
   * **ServiceRequest Extraction**: Converts physician care plan follow-up recommendations (e.g. HbA1c screening, echocardiogram consult) into FHIR `ServiceRequest` proposals.
   * **End-to-End Lineage & Provenance**: Extracted entities are tagged with `nte-extracted` security metadata and linked to patient/encounter surrogate URNs.
 
+### Version 1.2: Enterprise Studio Suite & Conformance Diagnostics
+* **HL7 v2 Specification Structural Linter & Conformance Inspector**:
+  * Evaluates delimiter compliance, MSH mandatory fields (MSH-9, MSH-10, MSH-12), PID demographics (PID-3 MRN, PID-5 Name, PID-7 DOB, PID-8 Sex), and OBX result metrics (OBX-2, OBX-3, OBX-6 UCUM unit, OBX-11 status).
+  * Real-time Quality Score (0–100%) and expandable diagnostics drawer providing actionable clinical recommendations.
+* **Enterprise Multi-Message Batch Processing Studio**:
+  * Bulk conversion studio supporting cohort runs, custom multi-message log uploads, and 1-click clinical cohort loading.
+  * Real-time aggregate telemetry: message throughput, total resources generated, average confidence, and vaulted PHI counts.
+  * Bulk FHIR NDJSON (`.ndjson`) and consolidated JSON (`.json`) streaming download.
+  * Batch transaction push to target FHIR repositories (HAPI, GCP Healthcare, AWS HealthLake).
+* **Clinical Topology & Resource Provenance Graph**:
+  * Interactive DAG visualization mapping `Patient` (Root Subject) $\rightarrow$ `Encounter` $\rightarrow$ `DiagnosticReport` $\rightarrow$ `Observations` / `Conditions` / `ServiceRequests` / `Coverage`.
+  * Contextual status badges, abnormal flag highlights, and 1-click single-resource JSON copy.
+* **Developer API Integration Snippets**:
+  * Ready-to-copy integration code in `cURL`, `Python (httpx)`, `TypeScript (fetch)`, and `FHIR REST Transaction POST` for interface engine channels (Mirth Connect, Rhapsody, custom microservices).
+* **Intelligent Hybrid Dual-Engine Architecture**:
+  * Automatic backend detection (`http://127.0.0.1:8000/api/v1`) with zero-dependency in-browser TypeScript failover.
+  * Real-time telemetry console displaying active mode, ping latency, capability checklist, and engine preference switching (`auto`, `backend`, `browser`).
+
 ---
 
 ## Quickstart

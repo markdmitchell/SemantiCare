@@ -23,6 +23,7 @@ import { HowItWorksModal } from './components/HowItWorksModal';
 import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { UserGuideModal } from './components/UserGuideModal';
 import { EngineStatusModal } from './components/EngineStatusModal';
+import { BatchProcessorModal } from './components/BatchProcessorModal';
 import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
 import { Footer } from './components/Footer';
 import { LabResultsFlowsheet } from './components/LabResultsFlowsheet';
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
   const [showUserGuide, setShowUserGuide] = useState<boolean>(false);
   const [showEngineModal, setShowEngineModal] = useState<boolean>(false);
+  const [showBatchModal, setShowBatchModal] = useState<boolean>(false);
   const [footerModalTab, setFooterModalTab] = useState<FooterTab | null>(null);
   const [rulesCount, setRulesCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -310,6 +312,7 @@ export const App: React.FC = () => {
         onOpenRulesModal={() => setShowRulesModal(true)}
         onOpenUserGuide={() => setShowUserGuide(true)}
         onOpenEngineModal={() => setShowEngineModal(true)}
+        onOpenBatchModal={() => setShowBatchModal(true)}
       />
 
       <ClinicalPatientBanner
@@ -461,6 +464,17 @@ export const App: React.FC = () => {
           onEngineChanged={() => {
             setBackendOnline(getActiveEngineMode() === 'backend');
             executePipeline(rawHL7);
+          }}
+        />
+      )}
+
+      {showBatchModal && (
+        <BatchProcessorModal
+          isOpen={showBatchModal}
+          onClose={() => setShowBatchModal(false)}
+          onLoadSingleMessage={(msg) => {
+            setRawHL7(msg);
+            executePipeline(msg);
           }}
         />
       )}

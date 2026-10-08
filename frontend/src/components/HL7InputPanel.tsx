@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import type { HL7Delimiters, HL7Sample } from '../types/hl7';
+import { lintHL7Message } from '../engine/hl7Linter';
 import {
   Play,
   Copy,
@@ -10,6 +11,14 @@ import {
   Sparkles,
   ShieldCheck,
   Wand2,
+  FileCheck,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from 'lucide-react';
 
 interface HL7InputPanelProps {
@@ -49,8 +58,11 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [showDelims, setShowDelims] = useState(false);
+  const [showLinterDrawer, setShowLinterDrawer] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
+
+  const lintReport = useMemo(() => lintHL7Message(rawHL7), [rawHL7]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(rawHL7);
@@ -119,6 +131,40 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {rawHL7.trim() && (
+            <button
+              onClick={() => setShowLinterDrawer(!showLinterDrawer)}
+              className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded font-medium border transition cursor-pointer ${
+                lintReport.errors_count > 0
+                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                  : lintReport.warnings_count > 0
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
+                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+              }`}
+              title="Click to view HL7 v2 conformance and diagnostic report"
+            >
+              {lintReport.errors_count > 0 ? (
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+              ) : lintReport.warnings_count > 0 ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              )}
+              <span className="hidden sm:inline">
+                {lintReport.errors_count > 0
+                  ? `${lintReport.errors_count} Issue${lintReport.errors_count > 1 ? 's' : ''}`
+                  : lintReport.warnings_count > 0
+                  ? `${lintReport.warnings_count} Warning${lintReport.warnings_count > 1 ? 's' : ''}`
+                  : `100% Compliant`}
+              </span>
+              <span className="text-[10px] opacity-75 font-mono">({lintReport.score}%)</span>
+              {showLinterDrawer ? (
+                <ChevronUp className="w-3 h-3 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              )}
+            </button>
+          )}
           <button
             onClick={handleFormat}
             disabled={!rawHL7.trim()}
@@ -146,6 +192,109 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
           </button>
         </div>
       </div>
+
+      {/* HL7 Linter Diagnostics Drawer */}
+      {showLinterDrawer && (
+        <div className="bg-slate-50/95 border-b border-slate-200/90 p-3 max-h-64 overflow-y-auto transition-all">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <FileCheck className="w-4 h-4 text-sky-600" />
+              <span className="text-xs font-semibold text-slate-800">HL7 v2 Conformance Diagnostics</span>
+              {lintReport.message_type && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
+                  {lintReport.message_type}
+                </span>
+              )}
+              {lintReport.hl7_version && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                  v{lintReport.hl7_version}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-slate-500">Quality Score:</span>
+                <span
+                  className={`text-xs font-bold font-mono ${
+                    lintReport.score >= 90
+                      ? 'text-emerald-700'
+                      : lintReport.score >= 70
+                      ? 'text-amber-700'
+                      : 'text-rose-700'
+                  }`}
+                >
+                  {lintReport.score}%
+                </span>
+                <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${
+                      lintReport.score >= 90
+                        ? 'bg-emerald-500'
+                        : lintReport.score >= 70
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500'
+                    }`}
+                    style={{ width: `${lintReport.score}%` }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowLinterDrawer(false)}
+                className="text-slate-400 hover:text-slate-600 p-0.5 rounded hover:bg-slate-200/60 cursor-pointer"
+                title="Close diagnostics"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-2.5 space-y-2">
+            {lintReport.issues.length === 0 ? (
+              <div className="flex items-center gap-2 p-2 bg-emerald-50/70 border border-emerald-200/70 rounded-lg text-xs text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Message conforms with HL7 v2 standard rules and syntax guidelines. No defects found.</span>
+              </div>
+            ) : (
+              lintReport.issues.map((issue) => (
+                <div
+                  key={issue.id}
+                  className={`p-2.5 rounded-lg border text-xs ${
+                    issue.severity === 'error'
+                      ? 'bg-rose-50/70 border-rose-200/80 text-rose-900'
+                      : issue.severity === 'warning'
+                      ? 'bg-amber-50/70 border-amber-200/80 text-amber-900'
+                      : 'bg-sky-50/70 border-sky-200/80 text-sky-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 font-semibold">
+                      {issue.severity === 'error' && <AlertCircle className="w-3.5 h-3.5 text-rose-600" />}
+                      {issue.severity === 'warning' && <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
+                      {issue.severity === 'info' && <Info className="w-3.5 h-3.5 text-sky-600" />}
+                      <span>{issue.title}</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 font-mono text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded bg-white/80 border border-current font-bold uppercase">
+                        {issue.severity}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-white/80 border border-current font-bold">
+                        {issue.field || issue.segment}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] opacity-90 leading-relaxed mb-1.5">{issue.message}</p>
+                  <div className="bg-white/70 px-2 py-1 rounded text-[11px] font-medium border border-current/20 flex items-start gap-1">
+                    <span className="shrink-0">💡</span>
+                    <span>{issue.recommendation}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Active Sample Context Banner */}
       {activeSample && (
