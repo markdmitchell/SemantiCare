@@ -1,8 +1,11 @@
 /**
- * Local in-browser engine API surface.
- * Replicates backend/app/api/routes.py response shapes using the TS engine port,
- * running fully client-side (no network calls except pushBundleToFHIRServer).
+ * SemantiCare Intelligent Hybrid API Service.
+ * Attempts communication with the live FastAPI backend (http://127.0.0.1:8000/api/v1).
+ * If the backend is running, uses high-performance Python services.
+ * If the backend is unreachable (standalone, demo, or offline), seamlessly falls back
+ * to the zero-dependency in-browser TypeScript engine.
  */
+
 import type { HL7Sample, ParseHL7Response, MapHL7Response, ValidationResult, MappingRule } from '../types/hl7';
 import { parseHl7Message } from '../engine/hl7Parser';
 import { getAllSamples } from '../engine/sampleMessages';
@@ -10,31 +13,164 @@ import { scrubHl7Message, TokenVault } from '../engine/phiScrubber';
 import { SemanticMapper } from '../engine/mapper';
 import { lookupLoinc, matchTerminology } from '../engine/loincCatalog';
 import { validateFhirBundle } from '../engine/fhirValidator';
+import {
+  loadRules,
+  storeRules,
+  saveRule,
+  deleteRule,
+  exportRulesConceptMapJson,
+} from '../engine/rulesStore';
 
-export async function fetchHealth(): Promise<{ status: string; phases_active: number[]; features: string[] }> {
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+
+export type EngineMode = 'backend' | 'browser';
+export type EnginePreference = 'auto' | 'backend' | 'browser';
+
+export interface HealthStatus {
+  status: string;
+  engine_mode: EngineMode;
+  phases_active: number[];
+  features: string[];
+  service?: string;
+}
+
+export interface EngineTelemetry {
+  activeMode: EngineMode;
+  preference: EnginePreference;
+  pingMs: number;
+  apiBase: string;
+  isBackendAvailable: boolean;
+  serviceName: string;
+  features: string[];
+}
+
+let activeEngineMode: EngineMode = 'browser';
+let enginePreference: EnginePreference = 'auto';
+let lastPingMs: number = 0;
+let isBackendAvailable: boolean = false;
+let backendFeatures: string[] = [];
+
+export function getActiveEngineMode(): EngineMode {
+  return activeEngineMode;
+}
+
+export function getEnginePreference(): EnginePreference {
+  return enginePreference;
+}
+
+export function setEnginePreference(pref: EnginePreference): EngineMode {
+  enginePreference = pref;
+  if (pref === 'browser') {
+    activeEngineMode = 'browser';
+  } else if (pref === 'backend') {
+    activeEngineMode = isBackendAvailable ? 'backend' : 'browser';
+  } else {
+    // auto
+    activeEngineMode = isBackendAvailable ? 'backend' : 'browser';
+  }
+  return activeEngineMode;
+}
+
+export function getEngineTelemetry(): EngineTelemetry {
   return {
-    status: 'online',
-    phases_active: [1, 2, 3, 4, 5],
-    features: [
+    activeMode: activeEngineMode,
+    preference: enginePreference,
+    pingMs: lastPingMs,
+    apiBase: API_BASE,
+    isBackendAvailable,
+    serviceName: activeEngineMode === 'backend' ? 'FastAPI Python Engine' : 'In-Browser Standalone Engine',
+    features: activeEngineMode === 'backend' && backendFeatures.length ? backendFeatures : [
       'Deterministic HL7 v2 Segment & Field Parser',
-      'HL7 Standard Metadata Dictionary',
-      'Zero-Trust Reversible PHI Scrubber (Token Vault)',
-      'Semantic FHIR R4 Translation Engine (Patient, Encounter, Observation, DiagnosticReport, Condition, Coverage)',
-      'LOINC Top-Lab & UCUM Terminology Grounding',
-      'Human-in-the-Loop Ambiguity Resolution & In-Memory Updates',
-      'FHIR R4 Schema & US Core 3.1.1/6.1.0 Conformance Validator',
-      'Bulk NDJSON & Re-Hydrated PHI Export Pipeline',
-      'Enterprise Multi-Message Batch Processing & FHIR Store Push Endpoint',
-      'Docker Multi-Stage Containerization Architecture',
+      'Zero-Trust Client PHI Token Vault',
+      'Clinical NLP & NTE Entity Extractor',
+      'US Core 3.1.1 & FHIR R4 Schema Validator',
+      'Local Storage Institutional Mapping Memory',
     ],
   };
 }
 
+export async function fetchHealth(): Promise<HealthStatus> {
+  const start = performance.now();
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
+    clearTimeout(timer);
+    lastPingMs = Math.round(performance.now() - start);
+    if (res.ok) {
+      const data = await res.json();
+      isBackendAvailable = true;
+      backendFeatures = data.features || [];
+      activeEngineMode = enginePreference === 'browser' ? 'browser' : 'backend';
+      return {
+        status: data.status || 'online',
+        engine_mode: activeEngineMode,
+        phases_active: data.phases_active || [1, 2, 3, 4, 5],
+        features: backendFeatures,
+        service: data.service || 'FastAPI Cloud/Local Backend',
+      };
+    }
+  } catch {
+    lastPingMs = -1;
+    isBackendAvailable = false;
+  }
+
+  activeEngineMode = 'browser';
+  return {
+    status: 'online',
+    engine_mode: 'browser',
+    phases_active: [1, 2, 3, 4, 5],
+    features: [
+      'Client-Side In-Browser HL7 v2 Parser & Semantic Mapper',
+      'Zero-Trust Client PHI Token Vault',
+      'Clinical NLP & NTE Entity Extractor (Browser Regex Engine)',
+      'US Core 3.1.1 & FHIR R4 Schema Validator',
+      'Local Storage Institutional Mapping Memory',
+    ],
+    service: 'In-Browser Standalone Engine',
+  };
+}
+
 export async function fetchSamples(): Promise<HL7Sample[]> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1200);
+      const res = await fetch(`${API_BASE}/samples`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.samples) && data.samples.length > 0) {
+          return data.samples;
+        }
+      }
+    } catch {
+      // Fall back
+    }
+  }
   return getAllSamples();
 }
 
 export async function parseHL7(raw_hl7: string): Promise<ParseHL7Response> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(`${API_BASE}/parse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw_hl7 }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fall back to local parser
+    }
+  }
+
   try {
     const result = parseHl7Message(raw_hl7);
     return {
@@ -111,6 +247,25 @@ export function processSingleHl7Message(rawInput: string, enablePhiScrubbing: bo
 }
 
 export async function mapHL7(raw_hl7: string, enable_phi_scrubbing: boolean = true): Promise<MapHL7Response> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(`${API_BASE}/map`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw_hl7, enable_phi_scrubbing }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fall back
+    }
+  }
+
   try {
     return processSingleHl7Message(raw_hl7, enable_phi_scrubbing);
   } catch (e: any) {
@@ -131,6 +286,25 @@ export async function mapHL7(raw_hl7: string, enable_phi_scrubbing: boolean = tr
 }
 
 export async function validateFHIRBundle(bundle: any, profile: string = 'us-core'): Promise<ValidationResult> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch(`${API_BASE}/fhir/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bundle, profile }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fall back
+    }
+  }
+
   return validateFhirBundle(bundle, profile) as unknown as ValidationResult;
 }
 
@@ -146,6 +320,26 @@ export async function pushBundleToFHIRServer(
   message?: string;
   error?: string;
 }> {
+  // Try via backend proxy first to avoid browser CORS issues
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${API_BASE}/fhir/push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bundle, fhir_server_url, auth_token }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Direct browser fallback
+    }
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/fhir+json',
     Accept: 'application/fhir+json',
@@ -182,31 +376,26 @@ export async function pushBundleToFHIRServer(
 
 export { lookupLoinc, matchTerminology };
 
-// ---- Institutional mapping rules, stored in this browser ----
-const RULES_KEY = 'semanticare.mappingRules.v1';
-const rid = () => `rule-${Math.random().toString(16).slice(2, 10)}`;
-function seedRules(): MappingRule[] {
-  const now = new Date().toISOString();
-  return [
-    { id: rid(), facility: 'METRO_HEALTH', rule_type: 'LOCAL_TERMINOLOGY', source_key: 'BP_LOCAL', target_value: '85354-9', target_display: 'Blood pressure panel with all children optional', author: 'Clinical Informatics Governance', created_at: now, applied_count: 4, notes: 'Hospital default for Philips bedside telemetry monitor non-invasive blood pressure.' },
-    { id: rid(), facility: 'METRO_HEALTH', rule_type: 'MISSING_UNIT', source_key: '29463-7', target_value: 'kg', target_display: 'Kilograms (kg)', author: 'Quality & Safety Committee', created_at: now, applied_count: 6, notes: 'Inpatient adult medical floors use calibrated metric scales; default to kg.' },
-    { id: rid(), facility: 'METRO_CARDIO', rule_type: 'LOCAL_TERMINOLOGY', source_key: 'TROP_POC', target_value: '49563-0', target_display: 'Troponin I.cardiac [Mass/volume] in Blood by Point of care method', author: 'Cardiology Quality Lead', created_at: now, applied_count: 2, notes: 'Metro Cardiology point-of-care rapid troponin immunoassay.' },
-  ];
-}
-function loadRules(): MappingRule[] {
-  try {
-    const raw = localStorage.getItem(RULES_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
-  const seeded = seedRules();
-  storeRules(seeded);
-  return seeded;
-}
-function storeRules(rules: MappingRule[]) {
-  try { localStorage.setItem(RULES_KEY, JSON.stringify(rules)); } catch { /* ignore */ }
-}
-
 export async function fetchMappingRules(facility?: string): Promise<{ count: number; facility_filter?: string; rules: MappingRule[] }> {
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const url = facility ? `${API_BASE}/rules/?facility=${encodeURIComponent(facility)}` : `${API_BASE}/rules/`;
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.rules)) {
+          storeRules(data.rules);
+        }
+        return data;
+      }
+    } catch {
+      // Fall back
+    }
+  }
+
   let rules = loadRules();
   if (facility) {
     const f = facility.trim().toUpperCase();
@@ -216,62 +405,70 @@ export async function fetchMappingRules(facility?: string): Promise<{ count: num
 }
 
 export async function saveMappingRule(rule: Partial<MappingRule>): Promise<{ success: boolean; rule: MappingRule; message: string }> {
-  const rules = loadRules();
-  const facility = rule.facility?.trim() ? rule.facility.trim().toUpperCase() : '*';
-  const rule_type = rule.rule_type ?? 'LOCAL_TERMINOLOGY';
-  const source_key = (rule.source_key ?? '').trim();
-  const existing = rules.find((r) => r.facility === facility && r.rule_type === rule_type && r.source_key === source_key);
-  let saved: MappingRule;
-  if (existing) {
-    Object.assign(existing, {
-      target_value: rule.target_value ?? existing.target_value,
-      target_display: rule.target_display || existing.target_display,
-      author: rule.author || existing.author,
-      notes: rule.notes ?? existing.notes,
-    });
-    saved = existing;
-  } else {
-    saved = {
-      id: rid(), facility, rule_type, source_key,
-      target_value: rule.target_value ?? '',
-      target_display: rule.target_display || rule.target_value || '',
-      author: rule.author || 'Clinical Informaticist',
-      created_at: new Date().toISOString(), applied_count: 0, notes: rule.notes ?? '',
-    };
-    rules.push(saved);
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(`${API_BASE}/rules/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rule),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        saveRule(data.rule || rule);
+        return data;
+      }
+    } catch {
+      // Fall back
+    }
   }
-  storeRules(rules);
-  return { success: true, rule: saved, message: existing ? 'Rule updated.' : 'Rule saved.' };
+
+  const { saved, isNew } = saveRule(rule);
+  return { success: true, rule: saved, message: isNew ? 'Rule saved.' : 'Rule updated.' };
 }
 
 export async function deleteMappingRule(ruleId: string): Promise<{ success: boolean; deleted_id: string; message: string }> {
-  const rules = loadRules();
-  const next = rules.filter((r) => r.id !== ruleId);
-  if (next.length === rules.length) throw new Error('Rule not found');
-  storeRules(next);
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(`${API_BASE}/rules/${encodeURIComponent(ruleId)}`, {
+        method: 'DELETE',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        deleteRule(ruleId);
+        return data;
+      }
+    } catch {
+      // Fall back
+    }
+  }
+
+  const ok = deleteRule(ruleId);
+  if (!ok) throw new Error('Rule not found');
   return { success: true, deleted_id: ruleId, message: 'Rule deleted.' };
 }
 
 export async function exportRulesConceptMap(): Promise<any> {
-  const rules = loadRules().filter((r) => r.rule_type === 'LOCAL_TERMINOLOGY');
-  const groups: Record<string, any[]> = {};
-  for (const r of rules) {
-    (groups[r.facility] ??= []).push({
-      code: r.source_key,
-      target: [{ code: r.target_value, display: r.target_display, equivalence: 'equivalent', comment: r.notes || undefined }],
-    });
+  if (activeEngineMode === 'backend') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${API_BASE}/rules/conceptmap`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fall back
+    }
   }
-  return {
-    resourceType: 'ConceptMap',
-    id: 'semanticare-institutional-rules',
-    title: 'SemantiCare Institutional Terminology ConceptMap',
-    status: 'active',
-    date: new Date().toISOString().slice(0, 10),
-    publisher: 'SemantiCare Clinical Informatics',
-    group: Object.entries(groups).map(([facility, element]) => ({
-      source: `urn:semanticare:facility:${facility}`,
-      target: 'http://loinc.org',
-      element,
-    })),
-  };
+
+  return exportRulesConceptMapJson();
 }

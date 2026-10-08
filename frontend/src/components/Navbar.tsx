@@ -24,6 +24,7 @@ interface NavbarProps {
   onOpenExport: () => void;
   onOpenRulesModal: () => void;
   onOpenUserGuide: () => void;
+  onOpenEngineModal?: () => void;
 }
 
 const sampleIcon = (category: string) => {
@@ -37,7 +38,7 @@ const sampleIcon = (category: string) => {
 export const Navbar: React.FC<NavbarProps> = ({
   backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
   canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
-  onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide,
+  onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal,
 }) => {
   const tab = (mode: Mode, icon: React.ReactNode, label: string, extra?: React.ReactNode) => (
     <button
@@ -61,11 +62,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="font-semibold text-slate-900 tracking-tight leading-tight">SemantiCare</div>
             <div className="text-[11px] text-slate-500 truncate">HL7 v2 → FHIR R4 clinical bridge</div>
           </div>
-          <div className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
-            <span className={`w-1.5 h-1.5 rounded-full ${backendOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-            {backendOnline ? 'Engine ready' : 'Engine offline'}
+          <button
+            onClick={onOpenEngineModal}
+            className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[11px] text-slate-600 transition cursor-pointer"
+            title="Click to view engine telemetry, test backend connection, or switch engine modes"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${backendOnline ? 'bg-emerald-500' : 'bg-sky-500'}`} />
+            <span className="font-semibold text-slate-700">
+              {backendOnline ? 'FastAPI Engine' : 'Browser Engine'}
+            </span>
             {messageType && <span className="text-slate-400">· {messageType} · {totalSegments} segs</span>}
-          </div>
+          </button>
         </div>
         <div className="flex items-center gap-1 text-xs">
           <button onClick={onOpenRulesModal} className={ghost} title="Institutional mapping memory">

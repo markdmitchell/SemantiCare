@@ -6,6 +6,8 @@ import type { HL7Segment } from '../types/hl7';
 import { lookupLoinc, matchTerminology, validateUcum, inferMissingUnitCandidates } from './loincCatalog';
 import type { TokenVault } from './phiScrubber';
 import type { AmbiguityFlag, MappingLineage, ResourceConfidence } from '../types/hl7';
+import { findMatchingRule, incrementRuleUsage } from './rulesStore';
+import { extractEntitiesFromNte } from './clinicalNer';
 
 function uuidHex(len: number): string {
   const bytes = new Uint8Array(Math.ceil(len / 2));
@@ -104,6 +106,7 @@ export class SemanticMapper {
   patientUrn: string;
   encounterId: string;
   encounterUrn: string;
+  facility: string = '*';
   ambiguities: AmbiguityFlag[] = [];
   lineage: MappingLineage[] = [];
   confidenceCounts: Record<string, number> = { high: 0, medium: 0, low: 0 };
@@ -428,34 +431,59 @@ export class SemanticMapper {
         displayName = obsCodeRaw.trim();
       }
 
-      const loincEntry = lookupLoinc(parsedCode);
-      const isGrounded = loincEntry !== null;
-
-      let matchedCandidates: ReturnType<typeof matchTerminology> = [];
-      if (!isGrounded) {
-        matchedCandidates = matchTerminology(displayName || parsedCode);
-        if (matchedCandidates.length) {
-          const top = matchedCandidates[0];
-          this.ambiguities.push({
-            id: `amb-term-${obsId}`,
-            type: 'LOCAL_TERMINOLOGY',
-            severity: 'warning',
-            field_location: `OBX-3 (Index ${idx})`,
-            title: `Local Code '${parsedCode}' Grounded to LOINC`,
-            message: `Local test '${displayName}' mapped to LOINC ${top.code} (${top.display}) with ${Math.round(top.confidence * 100)}% confidence.`,
-            suggested_options: matchedCandidates.map((c) => `${c.code} - ${c.display}`),
-            default_choice: `${top.code} - ${top.display}`,
-            target_resource_id: obsId,
-          });
-          parsedCode = top.code;
-          displayName = top.display;
-          this.recordConfidence('medium');
-        } else {
-          this.recordConfidence('low');
-        }
-      } else {
-        displayName = loincEntry!.display;
+      // 1. Check Institutional Rulebase (Mapping Memory)
+      const termRule = findMatchingRule(this.facility, 'LOCAL_TERMINOLOGY', parsedCode);
+      let isGrounded = false;
+      if (termRule) {
+        parsedCode = termRule.target_value;
+        displayName = termRule.target_display || displayName;
+        incrementRuleUsage(termRule.id);
+        this.ambiguities.push({
+          id: `amb-term-${obsId}`,
+          type: 'LOCAL_TERMINOLOGY',
+          severity: 'info',
+          field_location: `OBX-3 (Index ${idx})`,
+          title: `Local Code '${termRule.source_key}' Auto-Resolved`,
+          message: `Auto-resolved to LOINC ${termRule.target_value} via institutional rule for facility '${termRule.facility}' (Author: ${termRule.author}).`,
+          suggested_options: [`${termRule.target_value} - ${displayName}`],
+          default_choice: `${termRule.target_value} - ${displayName}`,
+          target_resource_id: obsId,
+          is_resolved: true,
+          resolved_value: termRule.target_value,
+          resolved_by: `Institutional Rule (${termRule.id})`,
+        });
         this.recordConfidence('high');
+        isGrounded = true;
+      } else {
+        const loincEntry = lookupLoinc(parsedCode);
+        isGrounded = loincEntry !== null;
+
+        let matchedCandidates: ReturnType<typeof matchTerminology> = [];
+        if (!isGrounded) {
+          matchedCandidates = matchTerminology(displayName || parsedCode);
+          if (matchedCandidates.length) {
+            const top = matchedCandidates[0];
+            this.ambiguities.push({
+              id: `amb-term-${obsId}`,
+              type: 'LOCAL_TERMINOLOGY',
+              severity: 'warning',
+              field_location: `OBX-3 (Index ${idx})`,
+              title: `Local Code '${parsedCode}' Grounded to LOINC`,
+              message: `Local test '${displayName}' mapped to LOINC ${top.code} (${top.display}) with ${Math.round(top.confidence * 100)}% confidence.`,
+              suggested_options: matchedCandidates.map((c) => `${c.code} - ${c.display}`),
+              default_choice: `${top.code} - ${top.display}`,
+              target_resource_id: obsId,
+            });
+            parsedCode = top.code;
+            displayName = top.display;
+            this.recordConfidence('medium');
+          } else {
+            this.recordConfidence('low');
+          }
+        } else {
+          displayName = loincEntry!.display;
+          this.recordConfidence('high');
+        }
       }
 
       let categoryCode = 'laboratory';
@@ -514,23 +542,45 @@ export class SemanticMapper {
       // Handle Missing UCUM Unit
       let unitVal = rawUnits.trim();
       if (!unitVal && valueType === 'NM') {
-        const candidates = inferMissingUnitCandidates(displayName);
-        const defaultUnit = candidates.length ? candidates[0] : '1';
-        unitVal = defaultUnit;
-        this.ambiguities.push({
-          id: `amb-unit-${obsId}`,
-          type: 'MISSING_UNIT',
-          severity: 'action_required',
-          field_location: `OBX-6 (Index ${idx})`,
-          title: `Missing Unit for ${displayName}`,
-          message: `Observation has value '${rawVal}' but OBX-6 unit is empty. Clinical informaticist verification required.`,
-          suggested_options: candidates,
-          default_choice: defaultUnit,
-          target_resource_id: obsId,
-          target_property_path: 'valueQuantity.unit',
-          is_resolved: false,
-        });
-        this.recordConfidence('low');
+        const unitRule = findMatchingRule(this.facility, 'MISSING_UNIT', parsedCode);
+        if (unitRule) {
+          unitVal = unitRule.target_value;
+          incrementRuleUsage(unitRule.id);
+          this.ambiguities.push({
+            id: `amb-unit-${obsId}`,
+            type: 'MISSING_UNIT',
+            severity: 'info',
+            field_location: `OBX-6 (Index ${idx})`,
+            title: `Missing Unit for ${displayName} Auto-Resolved`,
+            message: `Auto-resolved unit '${unitRule.target_value}' via institutional rule for facility '${unitRule.facility}' (Author: ${unitRule.author}).`,
+            suggested_options: [unitRule.target_value],
+            default_choice: unitRule.target_value,
+            target_resource_id: obsId,
+            target_property_path: 'valueQuantity.unit',
+            is_resolved: true,
+            resolved_value: unitRule.target_value,
+            resolved_by: `Institutional Rule (${unitRule.id})`,
+          });
+          this.recordConfidence('high');
+        } else {
+          const candidates = inferMissingUnitCandidates(displayName);
+          const defaultUnit = candidates.length ? candidates[0] : '1';
+          unitVal = defaultUnit;
+          this.ambiguities.push({
+            id: `amb-unit-${obsId}`,
+            type: 'MISSING_UNIT',
+            severity: 'action_required',
+            field_location: `OBX-6 (Index ${idx})`,
+            title: `Missing Unit for ${displayName}`,
+            message: `Observation has value '${rawVal}' but OBX-6 unit is empty. Clinical informaticist verification required.`,
+            suggested_options: candidates,
+            default_choice: defaultUnit,
+            target_resource_id: obsId,
+            target_property_path: 'valueQuantity.unit',
+            is_resolved: false,
+          });
+          this.recordConfidence('low');
+        }
       } else if (unitVal && validateUcum(unitVal)) {
         this.recordConfidence('high');
       }
@@ -717,6 +767,13 @@ export class SemanticMapper {
 
     const resources: any[] = [];
 
+    // Facility from MSH-4
+    this.facility = '*';
+    if (mshSeg) {
+      const mshFields = fieldsByIndex(mshSeg);
+      this.facility = mshFields[4]?.raw_value || '*';
+    }
+
     if (pidSeg) {
       const patient = this.mapPatient(pidSeg, nk1Segs);
       resources.push(patient);
@@ -734,6 +791,30 @@ export class SemanticMapper {
     const { conditions, coverages } = this.mapConditionsAndCoverage(dg1Segs, in1Segs);
     resources.push(...conditions);
     resources.push(...coverages);
+
+    // 5. Extract structured entities from unstructured NTE clinical notes (Clinical NLP)
+    nteSegs.forEach((nte, nIdx0) => {
+      const nIdx = nIdx0 + 1;
+      const nFields = fieldsByIndex(nte);
+      const nteComment = nFields[3]?.raw_value ?? '';
+      if (nteComment) {
+        const extractedEntities = extractEntitiesFromNte(
+          nteComment,
+          this.patientUrn,
+          this.encounterUrn,
+          `NTE-3 (Index ${nIdx})`
+        );
+        for (const ent of extractedEntities) {
+          resources.push(ent.fhir_resource);
+          this.lineage.push({
+            fhir_path: `${ent.fhir_resource.resourceType}[${ent.fhir_resource.id}]`,
+            hl7_source: `NTE-3 (Index ${nIdx})`,
+            confidence: 'high',
+          });
+          this.recordConfidence('high');
+        }
+      }
+    });
 
     let mshTs = '';
     if (mshSeg) {

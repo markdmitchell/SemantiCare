@@ -28,21 +28,45 @@ const rangePos = (val: string, range: string) => {
 };
 
 export const LabResultsFlowsheet: React.FC<{ segments: HL7Segment[] }> = ({ segments }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const obx = segments.filter((s) => s.segment_id === 'OBX' && f(s, 2) !== 'TX' && f(s, 2) !== 'FT');
   if (obx.length === 0) return null;
   const abnormal = obx.filter((s) => f(s, 8) && f(s, 8) !== 'N').length;
 
   return (
-    <div className="max-w-7xl w-full mx-auto px-4 pt-4">
+    <div className="max-w-7xl w-full mx-auto px-4 pt-2.5">
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
-          <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <FlaskConical className="w-4 h-4 text-sky-600" />
-            Lab Results
-            <span className="text-[11px] font-medium text-slate-500">{obx.length} results{abnormal ? ` · ${abnormal} outside normal range` : ''}</span>
-          </span>
-          {open ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center justify-between px-4 py-2 bg-slate-50 hover:bg-slate-100/70 transition border-b border-slate-200 cursor-pointer"
+        >
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 flex-wrap">
+            <FlaskConical className="w-3.5 h-3.5 text-sky-600" />
+            <span>Lab Results Flowsheet</span>
+            <span className="text-[11px] font-normal text-slate-500">
+              ({obx.length} {obx.length === 1 ? 'test' : 'tests'}
+              {abnormal > 0 ? ` · ${abnormal} abnormal` : ' · all within range'})
+            </span>
+            {!open && abnormal > 0 && (
+              <div className="flex items-center gap-1.5 ml-2">
+                {obx
+                  .filter((s) => f(s, 8) && f(s, 8) !== 'N')
+                  .slice(0, 3)
+                  .map((s) => (
+                    <span
+                      key={s.unique_id}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${flagStyle(f(s, 8))}`}
+                    >
+                      {f(s, 3, 2) || f(s, 3, 1)}: {f(s, 5)} {f(s, 8)}
+                    </span>
+                  ))}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+            <span>{open ? 'Collapse' : 'Expand'}</span>
+            {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </div>
         </button>
         {open && (
           <div className="overflow-x-auto max-h-64">

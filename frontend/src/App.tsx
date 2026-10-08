@@ -8,7 +8,7 @@ import type {
   HL7Field,
   AmbiguityFlag,
 } from './types/hl7';
-import { fetchSamples, parseHL7, mapHL7, validateFHIRBundle, fetchHealth, fetchMappingRules } from './services/api';
+import { fetchSamples, parseHL7, mapHL7, validateFHIRBundle, fetchHealth, fetchMappingRules, getActiveEngineMode } from './services/api';
 import { Navbar } from './components/Navbar';
 import { HL7InputPanel } from './components/HL7InputPanel';
 import { StructuralTreeViewer } from './components/StructuralTreeViewer';
@@ -22,6 +22,7 @@ import { ExportModal } from './components/ExportModal';
 import { HowItWorksModal } from './components/HowItWorksModal';
 import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { UserGuideModal } from './components/UserGuideModal';
+import { EngineStatusModal } from './components/EngineStatusModal';
 import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
 import { Footer } from './components/Footer';
 import { LabResultsFlowsheet } from './components/LabResultsFlowsheet';
@@ -51,6 +52,7 @@ export const App: React.FC = () => {
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false);
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
   const [showUserGuide, setShowUserGuide] = useState<boolean>(false);
+  const [showEngineModal, setShowEngineModal] = useState<boolean>(false);
   const [footerModalTab, setFooterModalTab] = useState<FooterTab | null>(null);
   const [rulesCount, setRulesCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -68,10 +70,10 @@ export const App: React.FC = () => {
   useEffect(() => {
     async function init() {
       try {
-        await fetchHealth();
-        setBackendOnline(true);
+        const health = await fetchHealth();
+        setBackendOnline(health.engine_mode === 'backend');
       } catch (err) {
-        console.warn('Backend not responding yet:', err);
+        console.warn('Backend check failed:', err);
         setBackendOnline(false);
       }
 
@@ -89,7 +91,7 @@ export const App: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to load clinical samples:', err);
-        setErrorMessage('Could not connect to FastAPI backend. Ensure backend is running on http://127.0.0.1:8000.');
+        setErrorMessage('Failed to initialize clinical samples.');
       }
     }
 
@@ -108,7 +110,7 @@ export const App: React.FC = () => {
       ]);
       setParseResult(parseRes);
       setMappingResult(mapRes);
-      setBackendOnline(true);
+      setBackendOnline(getActiveEngineMode() === 'backend');
 
       // Validate the newly mapped bundle
       if (mapRes.success && mapRes.fhir_bundle) {
@@ -124,8 +126,8 @@ export const App: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Pipeline execution error:', err);
-      setErrorMessage(err.message || 'Error occurred while communicating with the backend API.');
-      setBackendOnline(false);
+      setErrorMessage(err.message || 'Error occurred while processing message.');
+      setBackendOnline(getActiveEngineMode() === 'backend');
     } finally {
       setLoading(false);
       setMappingLoading(false);
@@ -307,6 +309,7 @@ export const App: React.FC = () => {
         onOpenExport={() => setShowExportModal(true)}
         onOpenRulesModal={() => setShowRulesModal(true)}
         onOpenUserGuide={() => setShowUserGuide(true)}
+        onOpenEngineModal={() => setShowEngineModal(true)}
       />
 
       <ClinicalPatientBanner
@@ -337,9 +340,9 @@ export const App: React.FC = () => {
       <LabResultsFlowsheet segments={parseResult?.segments || []} />
 
       {/* Main Split-Pane Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-3 grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Pane: Ingestion & Controls (5 cols on lg) */}
-        <section className="lg:col-span-5 h-[calc(100vh-175px)] min-h-[500px]">
+        <section className="lg:col-span-5 h-[calc(100vh-270px)] min-h-[540px]">
           <HL7InputPanel
             rawHL7={rawHL7}
             setRawHL7={(val) => {
@@ -358,7 +361,7 @@ export const App: React.FC = () => {
         </section>
 
         {/* Right Pane: 4 Perspectives (AST / Resolution / FHIR Studio / Validation) */}
-        <section className="lg:col-span-7 h-[calc(100vh-175px)] min-h-[500px]">
+        <section className="lg:col-span-7 h-[calc(100vh-270px)] min-h-[540px]">
           {activeMode === 'structural' ? (
             <StructuralTreeViewer
               segments={parseResult?.segments || []}
@@ -446,6 +449,17 @@ export const App: React.FC = () => {
           onClose={() => setShowRulesModal(false)}
           onRulesUpdated={() => {
             refreshRulesCount();
+            executePipeline(rawHL7);
+          }}
+        />
+      )}
+
+      {showEngineModal && (
+        <EngineStatusModal
+          isOpen={showEngineModal}
+          onClose={() => setShowEngineModal(false)}
+          onEngineChanged={() => {
+            setBackendOnline(getActiveEngineMode() === 'backend');
             executePipeline(rawHL7);
           }}
         />

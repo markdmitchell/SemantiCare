@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { MapHL7Response, AmbiguityFlag } from '../types/hl7';
-import Editor from '@monaco-editor/react';
+import Editor, { DiffEditor } from '@monaco-editor/react';
 import {
   Sparkles,
   ShieldCheck,
@@ -18,6 +18,9 @@ import {
   Stethoscope,
   ClipboardList,
   RotateCcw,
+  Search,
+  GitCompare,
+  X,
 } from 'lucide-react';
 
 interface FHIRBundleViewerProps {
@@ -35,10 +38,12 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
   onOpenResolutionDeck,
   onDirectJsonEdit,
 }) => {
-  const [viewMode, setViewMode] = useState<'cards' | 'json'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'json' | 'diff'>('cards');
   const [useRehydrated, setUseRehydrated] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [selectedResourceType, setSelectedResourceType] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [copiedResourceId, setCopiedResourceId] = useState<string | null>(null);
   const [jsonText, setJsonText] = useState<string>('');
   const [jsonError, setJsonError] = useState<string | null>(null);
 
@@ -90,7 +95,7 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
       const parsed = JSON.parse(jsonText);
       setJsonText(JSON.stringify(parsed, null, 2));
       setJsonError(null);
-    } catch (err: any) {
+    } catch (_err: any) {
       setJsonError('Cannot prettify invalid JSON.');
     }
   };
@@ -104,10 +109,24 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
     }
   };
 
-  // Filter entries
+  const handleCopySingleResource = (res: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(JSON.stringify(res, null, 2));
+    setCopiedResourceId(res.id);
+    setTimeout(() => setCopiedResourceId(null), 1800);
+  };
+
+  // Filter entries by selected resource type and text search query
   const filteredEntries = entries.filter((e) => {
-    if (selectedResourceType === 'ALL') return true;
-    return e.resource?.resourceType === selectedResourceType;
+    const res = e.resource;
+    if (!res) return false;
+    if (selectedResourceType !== 'ALL' && res.resourceType !== selectedResourceType) {
+      return false;
+    }
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const str = JSON.stringify(res).toLowerCase();
+    return str.includes(q);
   });
 
   const getResourceIcon = (type: string) => {
@@ -231,7 +250,7 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
             </button>
             <button
               onClick={() => setViewMode('json')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
                 viewMode === 'json'
                   ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
@@ -239,6 +258,18 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
             >
               <FileCode className="w-3.5 h-3.5" />
               <span>Monaco Editor</span>
+            </button>
+            <button
+              onClick={() => setViewMode('diff')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
+                viewMode === 'diff'
+                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              title="Compare De-identified Token bundle with Re-hydrated PHI bundle side-by-side"
+            >
+              <GitCompare className="w-3.5 h-3.5" />
+              <span>Token Diff</span>
             </button>
           </div>
         </div>
@@ -294,34 +325,55 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
           </button>
         </div>
 
-        {/* Quick Resource Type Filter */}
-        <div className="flex items-center gap-1 overflow-x-auto">
-          <button
-            onClick={() => setSelectedResourceType('ALL')}
-            className={`text-[11px] px-2 py-0.5 rounded border transition ${
-              selectedResourceType === 'ALL'
-                ? 'bg-sky-50 border-sky-600 text-sky-700'
-                : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            All ({entries.length})
-          </button>
-          {mappingResult.resource_types.map((type) => {
-            const count = entries.filter((e) => e.resource?.resourceType === type).length;
-            return (
+        {/* Quick Resource Type Filter & Search Bar */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <button
+              onClick={() => setSelectedResourceType('ALL')}
+              className={`text-[11px] px-2 py-0.5 rounded border transition cursor-pointer ${
+                selectedResourceType === 'ALL'
+                  ? 'bg-sky-50 border-sky-600 text-sky-700 font-semibold'
+                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              All ({entries.length})
+            </button>
+            {mappingResult.resource_types.map((type) => {
+              const count = entries.filter((e) => e.resource?.resourceType === type).length;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setSelectedResourceType(type)}
+                  className={`text-[11px] px-2 py-0.5 rounded border transition cursor-pointer ${
+                    selectedResourceType === type
+                      ? 'bg-sky-50 border-sky-600 text-sky-700 font-semibold'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {type} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search resources..."
+              className="pl-7 pr-6 py-0.5 text-xs rounded-lg border border-slate-200 bg-white placeholder-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none w-44"
+            />
+            {searchQuery && (
               <button
-                key={type}
-                onClick={() => setSelectedResourceType(type)}
-                className={`text-[11px] px-2 py-0.5 rounded border transition ${
-                  selectedResourceType === type
-                    ? 'bg-sky-50 border-sky-600 text-sky-700'
-                    : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
-                {type} ({count})
+                <X className="w-3 h-3" />
               </button>
-            );
-          })}
+            )}
+          </div>
         </div>
       </div>
 
@@ -330,10 +382,29 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
         {viewMode === 'cards' ? (
           /* Visual Resource Cards */
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {filteredEntries.map((entry, idx) => {
-              const res = entry.resource;
-              const resType = res.resourceType;
-              const confidenceBadge = getConfidenceBadge(res.id);
+            {filteredEntries.length === 0 ? (
+              <div className="h-64 flex flex-col items-center justify-center text-center p-6 bg-white rounded-xl border border-slate-200">
+                <Search className="w-8 h-8 text-slate-300 mb-2" />
+                <h4 className="text-sm font-semibold text-slate-700">No matching FHIR resources</h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  {searchQuery
+                    ? `No resources match "${searchQuery}" in ${selectedResourceType === 'ALL' ? 'all categories' : selectedResourceType}.`
+                    : `No resources of type ${selectedResourceType} exist in this Bundle.`}
+                </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-3 px-3 py-1 text-xs rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredEntries.map((entry, idx) => {
+                const res = entry.resource;
+                const resType = res.resourceType;
+                const confidenceBadge = getConfidenceBadge(res.id);
 
               return (
                 <div
@@ -355,6 +426,23 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleCopySingleResource(res, e)}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                        title="Copy resource JSON"
+                      >
+                        {copiedResourceId === res.id ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-[10px] text-emerald-600 font-medium">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-slate-400" />
+                            <span className="text-[10px]">JSON</span>
+                          </>
+                        )}
+                      </button>
                       {confidenceBadge}
                       {res.status && (
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 text-emerald-600 border border-slate-200">
@@ -535,7 +623,40 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
                   )}
                 </div>
               );
-            })}
+            }))}
+          </div>
+        ) : viewMode === 'diff' ? (
+          /* Side-by-Side Diff: De-Identified Tokens vs Re-Hydrated PHI */
+          <div className="flex-1 flex flex-col overflow-hidden bg-white">
+            <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs">
+              <div className="flex items-center gap-2">
+                <GitCompare className="w-4 h-4 text-sky-600" />
+                <span className="font-semibold text-slate-800">Token Substitution Diff</span>
+                <span className="text-slate-500 text-[11px]">
+                  (Left: De-Identified Tokens • Right: Re-Hydrated PHI)
+                </span>
+              </div>
+              <div className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                {mappingResult.phi_audit?.total_redactions || 0} tokens protected
+              </div>
+            </div>
+            <div className="flex-1">
+              <DiffEditor
+                height="100%"
+                language="json"
+                theme="light"
+                original={JSON.stringify(mappingResult.fhir_bundle, null, 2)}
+                modified={JSON.stringify(mappingResult.rehydrated_bundle, null, 2)}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 12,
+                  automaticLayout: true,
+                  renderSideBySide: true,
+                  scrollBeyondLastLine: false,
+                }}
+              />
+            </div>
           </div>
         ) : (
           /* Monaco Editor JSON View */
@@ -595,7 +716,7 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
               <Editor
                 height="100%"
                 defaultLanguage="json"
-                theme="vs-dark"
+                theme="light"
                 value={jsonText}
                 onChange={handleMonacoChange}
                 options={{
