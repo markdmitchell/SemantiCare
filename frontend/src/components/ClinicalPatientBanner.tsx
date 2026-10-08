@@ -18,7 +18,7 @@ const field = (seg: HL7Segment | undefined, idx: number, comp?: number): string 
 };
 
 const fmtDate = (v: string) => {
-  if (!v || v.length < 8) return v || '—';
+  if (!v || v.length < 8) return v || 'N/A';
   const d = `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`;
   return v.length >= 12 ? `${d} ${v.slice(8, 10)}:${v.slice(10, 12)}` : d;
 };
@@ -30,7 +30,7 @@ const age = (dob: string) => {
   return isNaN(a) ? '' : `${a}y`;
 };
 
-const mask = (v: string, on: boolean) => (on && v ? '•••••' : v || '—');
+const mask = (v: string, on: boolean) => (on && v ? '•••••' : v || 'N/A');
 
 export const ClinicalPatientBanner: React.FC<Props> = ({ segments, metadata, phiScrubbingEnabled, unresolvedCount, conformanceScore }) => {
   const pid = segments.find((s) => s.segment_id === 'PID');
@@ -39,7 +39,7 @@ export const ClinicalPatientBanner: React.FC<Props> = ({ segments, metadata, phi
 
   const family = field(pid, 5, 1);
   const given = field(pid, 5, 2);
-  const name = phiScrubbingEnabled ? 'Patient (PHI protected)' : `${family.toUpperCase()}, ${given}`.replace(/^, |, $/, '') || '—';
+  const name = phiScrubbingEnabled ? 'Patient (PHI protected)' : `${family.toUpperCase()}, ${given}`.replace(/^, |, $/, '') || 'N/A';
   const dob = field(pid, 7);
   const sex = field(pid, 8);
   const mrn = field(pid, 3, 1);
@@ -51,7 +51,7 @@ export const ClinicalPatientBanner: React.FC<Props> = ({ segments, metadata, phi
   const Item = ({ label, value }: { label: string; value: string }) => (
     <div className="min-w-0">
       <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{label}</div>
-      <div className="text-xs text-slate-900 font-medium truncate">{value || '—'}</div>
+      <div className="text-xs text-slate-900 font-medium truncate">{value || 'N/A'}</div>
     </div>
   );
 
@@ -65,18 +65,18 @@ export const ClinicalPatientBanner: React.FC<Props> = ({ segments, metadata, phi
           <div>
             <div className="text-sm font-bold text-slate-900 tracking-tight">{name}</div>
             <div className="text-[11px] text-slate-600">
-              {sex || '—'} · {phiScrubbingEnabled ? 'DOB hidden' : `${fmtDate(dob)} (${age(dob)})`} · MRN {mask(mrn, phiScrubbingEnabled)}
+              {sex || 'N/A'} · {phiScrubbingEnabled ? 'DOB hidden' : `${fmtDate(dob)} (${age(dob)})`} · MRN {mask(mrn, phiScrubbingEnabled)}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-700">
           <Hospital className="w-4 h-4 text-sky-600" />
-          <Item label="Encounter" value={`${classLabel[cls] || cls || '—'}${loc ? ' · ' + loc : ''}`} />
+          <Item label="Encounter" value={`${classLabel[cls] || cls || 'N/A'}${loc ? ' · ' + loc : ''}`} />
         </div>
         <Item label="Attending" value={phiScrubbingEnabled && attending ? '•••••' : attending} />
         <div className="flex items-center gap-1.5">
           <CalendarClock className="w-4 h-4 text-sky-600" />
-          <Item label="Message" value={`${metadata?.message_type || '—'} · ${fmtDate(metadata?.message_datetime || '')}`} />
+          <Item label="Message" value={`${metadata?.message_type || 'N/A'} · ${fmtDate(metadata?.message_datetime || '')}`} />
         </div>
         <div className="ml-auto flex items-center gap-2 text-[11px] font-semibold">
           <span className={`flex items-center gap-1 px-2 py-1 rounded-full border ${phiScrubbingEnabled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>

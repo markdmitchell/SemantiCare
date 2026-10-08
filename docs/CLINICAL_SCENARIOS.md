@@ -18,7 +18,7 @@ All scenarios use synthetic data compliant with the **HIPAA Safe Harbor** de-ide
 
 ---
 
-## Scenario 1: `ADT^A01` — Inpatient Hospital Admission
+## Scenario 1: `ADT^A01`: Inpatient Hospital Admission
 
 ### Clinical Narrative
 A 42-year-old female presents to the Emergency Department with progressive fever, dyspnea, and productive cough. Following chest imaging, she is formally admitted as an inpatient to the 4-West Medical Unit (Bed 402-A) under attending physician Dr. Carlos M. Rivera for acute pneumonia. Her spouse is designated as the primary emergency contact, and she carries active Blue Cross Blue Shield PPO coverage.
@@ -51,7 +51,7 @@ IN1|1|BCBS001|BCBS_MA^Blue Cross Blue Shield MA|BLUE CROSS BLUE SHIELD|PO BOX 12
 
 ---
 
-## Scenario 2: `ORU^R01` — Comprehensive Metabolic & CBC Lab Results
+## Scenario 2: `ORU^R01`: Comprehensive Metabolic & CBC Lab Results
 
 ### Clinical Narrative
 A morning laboratory draw from the central chemistry lab yields a Comprehensive Metabolic Panel (CMP). Automated photometric and ion-selective electrode analyzers flag elevated fasting blood glucose (`165 mg/dL`) and mild hyponatremia (`132 mmol/L`). Other chemistries (Potassium, Creatinine, BUN) remain within reference intervals. A pathologist NTE narrative emphasizes follow-up diabetic screening.
@@ -83,7 +83,7 @@ NTE|1|L|Elevated fasting glucose noted. Recommend HbA1c screening if persistent.
 
 ---
 
-## Scenario 3: `ORU^R01` — Vital Signs with Semantic Ambiguities
+## Scenario 3: `ORU^R01`: Vital Signs with Semantic Ambiguities
 
 ### Clinical Narrative
 A continuous bedside patient monitor in the Intensive Care Unit generates an automated periodic vitals snapshot. This message reflects common telemetry integration defects:
@@ -120,7 +120,7 @@ NTE|1|O|Patient restless during weight measurement; scale zeroed prior to standi
 
 ---
 
-## Scenario 4: `ORU^R01` — Radiology Order with Proprietary Z-Segments
+## Scenario 4: `ORU^R01`: Radiology Order with Proprietary Z-Segments
 
 ### Clinical Narrative
 A digitized portable Chest X-Ray study from a hospital PACS system is transmitted following imaging acquisition. In addition to standard radiologist narrative impressions, the sending interface includes custom hospital Z-segments:
@@ -151,7 +151,7 @@ NTE|1|L|IMPRESSION: Mild bibasilar infiltrate consistent with early bronchopneum
 
 ---
 
-## Scenario 5: `ADT^A08` — Cardiology Visit with Dual Diagnoses & Insurance
+## Scenario 5: `ADT^A08`: Cardiology Visit with Dual Diagnoses & Insurance
 
 ### Clinical Narrative
 A 68-year-old male with chronic cardiovascular disease attends a scheduled outpatient follow-up at the Metro Cardiology Clinic. The EHR emits an `ADT^A08` patient information update message. The visit documents two chronic conditions: primary coronary artery disease (CAD) without angina (ICD-10 `I25.10`) and essential hypertension (ICD-10 `I10`). Demographics specify Spanish language preference, his daughter as primary emergency contact, and active Aetna Choice POS II commercial insurance.
