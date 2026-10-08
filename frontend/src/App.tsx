@@ -24,6 +24,7 @@ import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { UserGuideModal } from './components/UserGuideModal';
 import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
 import { Footer } from './components/Footer';
+import { ClinicalPatientBanner } from './components/ClinicalPatientBanner';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -307,6 +308,13 @@ export const App: React.FC = () => {
         onOpenUserGuide={() => setShowUserGuide(true)}
       />
 
+      <ClinicalPatientBanner
+        segments={parseResult?.segments || []}
+        metadata={parseResult?.metadata}
+        phiScrubbingEnabled={phiScrubbingEnabled}
+        unresolvedCount={unresolvedAmbiguities.length}
+        conformanceScore={validationResult?.conformance_score}
+      />
 
       {/* Error Alert Banner if any */}
       {errorMessage && (
