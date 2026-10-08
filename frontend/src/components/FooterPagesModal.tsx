@@ -257,7 +257,7 @@ export const FooterPagesModal: React.FC<FooterPagesModalProps> = ({
                   <span>Zero-Trust Privacy & HIPAA Safe Harbor Compliance</span>
                 </div>
                 <p className="text-slate-600">
-                  At SemantiCare, patient data privacy is not an afterthought or an optional configuration—it is enforced mathematically through our local Zero-Trust Reversible Token Vault architecture.
+                  At SemantiCare, patient data privacy is not an afterthought or an optional configuration. It is enforced mathematically through our local Zero-Trust Reversible Token Vault architecture.
                 </p>
               </div>
 
@@ -265,7 +265,7 @@ export const FooterPagesModal: React.FC<FooterPagesModalProps> = ({
                 <div className="p-4 bg-slate-50/40 border border-slate-200 rounded-lg space-y-2">
                   <h4 className="font-semibold text-slate-900">1. De-Identification Methodology</h4>
                   <p className="text-slate-500 text-[11px] leading-relaxed">
-                    SemantiCare aligns with the <strong>HIPAA Privacy Rule Safe Harbor Method (45 CFR § 164.514(b)(2))</strong>. All 18 direct and indirect identifiers—including patient names, medical record numbers (MRNs), social security numbers, dates of birth, street addresses, postal codes, and telephone numbers—are stripped and replaced with deterministic cryptographic surrogate tokens (e.g. <code>[PATIENT_FAMILY_NAME_1]</code>, <code>[MRN_1]</code>).
+                    SemantiCare aligns with the <strong>HIPAA Privacy Rule Safe Harbor Method (45 CFR § 164.514(b)(2))</strong>. All 18 direct and indirect identifiers, including patient names, medical record numbers (MRNs), social security numbers, dates of birth, street addresses, postal codes, and telephone numbers, are stripped and replaced with deterministic cryptographic surrogate tokens (e.g. <code>[PATIENT_FAMILY_NAME_1]</code>, <code>[MRN_1]</code>).
                   </p>
                 </div>
 
