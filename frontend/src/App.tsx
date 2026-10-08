@@ -24,6 +24,7 @@ import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { UserGuideModal } from './components/UserGuideModal';
 import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
 import { Footer } from './components/Footer';
+import { LabResultsFlowsheet } from './components/LabResultsFlowsheet';
 import { ClinicalPatientBanner } from './components/ClinicalPatientBanner';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -332,6 +333,8 @@ export const App: React.FC = () => {
           </button>
         </div>
       )}
+
+      <LabResultsFlowsheet segments={parseResult?.segments || []} />
 
       {/* Main Split-Pane Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
