@@ -28,6 +28,7 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
   activeSample,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [showDelims, setShowDelims] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(rawHL7);
@@ -51,7 +52,7 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
       <div className="flex items-center justify-between px-4 py-3 bg-slate-50/70 border-b border-slate-200">
         <div className="flex items-center gap-2">
           <Code className="w-4 h-4 text-sky-600" />
-          <h2 className="font-semibold text-sm text-slate-700">HL7 v2 Message Ingestion</h2>
+          <h2 className="font-semibold text-sm text-slate-700">Clinical Message</h2>
           <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">
             {lineCount} {lineCount === 1 ? 'segment' : 'segments'} • {charCount} chars
           </span>
@@ -123,35 +124,24 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
             className="w-3.5 h-3.5 rounded bg-slate-100 border-slate-200 text-emerald-500 focus:ring-0"
           />
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="text-slate-600 font-medium">Pre-Flight Zero-Trust PHI Scrubber</span>
+          <span className="text-slate-600 font-medium">Protect patient information (PHI)</span>
         </label>
-        <span className="text-[10px] text-slate-500">Reversible Token Vault</span>
+        <span className="text-[10px] text-slate-500">Hidden before processing</span>
       </div>
 
       {/* Footer Bar with Delimiter Badges and Action Buttons */}
       <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <Hash className="w-3.5 h-3.5 text-slate-500" />
-          {delimiters ? (
+          <button onClick={() => setShowDelims(!showDelims)} className="flex items-center gap-1 hover:text-sky-700" title="Show message separators">
+            <Hash className="w-3.5 h-3.5" />
+            <span>{showDelims ? 'Hide' : 'Show'} separators</span>
+          </button>
+          {showDelims && delimiters && (
             <div className="flex items-center gap-1 font-mono">
-              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-sky-700" title="Field Separator">
-                F:{delimiters.field}
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-amber-700" title="Component Separator">
-                C:{delimiters.component}
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-emerald-700" title="Repetition Separator">
-                R:{delimiters.repetition}
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-purple-700" title="Escape Character">
-                E:{delimiters.escape}
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-rose-700" title="Subcomponent Separator">
-                S:{delimiters.subcomponent}
-              </span>
+              {[['F', delimiters.field], ['C', delimiters.component], ['R', delimiters.repetition], ['E', delimiters.escape], ['S', delimiters.subcomponent]].map(([k, v]) => (
+                <span key={k} className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700">{k}:{v}</span>
+              ))}
             </div>
-          ) : (
-            <span className="text-slate-500 italic">Auto-detected delimiters</span>
           )}
         </div>
 
@@ -160,27 +150,27 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
           <button
             onClick={onParse}
             disabled={loading || mappingLoading || !rawHL7.trim()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 border border-slate-200 font-medium text-xs transition"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-100 disabled:opacity-50 text-slate-600 font-medium text-xs transition"
           >
             <Play className="w-3.5 h-3.5 text-sky-600" />
-            <span>Parse Tree</span>
+            <span>Structure only</span>
           </button>
 
           {/* Primary Map to FHIR Button */}
           <button
             onClick={onMapToFHIR}
             disabled={loading || mappingLoading || !rawHL7.trim()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-xs text-white shadow-md shadow-emerald-100/40 transition active:scale-[0.98]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-sky-700 hover:bg-sky-600 px-5 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-xs text-white shadow-md shadow-emerald-100/40 transition active:scale-[0.98]"
           >
             {mappingLoading ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                <span>Mapping FHIR...</span>
+                <span>Processing…</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Map to FHIR R4</span>
+                <span>Process Clinical Message</span>
               </>
             )}
           </button>
