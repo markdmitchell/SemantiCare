@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import type { HL7Delimiters, HL7Sample } from '../types/hl7';
 import { lintHL7Message } from '../engine/hl7Linter';
+import { PanelButton } from './PanelButton';
 import {
   Play,
   Copy,
@@ -16,8 +17,6 @@ import {
   AlertTriangle,
   Info,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   X,
 } from 'lucide-react';
 
@@ -120,76 +119,38 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50/70 border-b border-slate-200">
-        <div className="flex items-center gap-2">
-          <Code className="w-4 h-4 text-sky-600" />
-          <h2 className="font-semibold text-sm text-slate-800">Clinical Message</h2>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-            {lineCount} {lineCount === 1 ? 'segment' : 'segments'} • {charCount} chars
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {rawHL7.trim() && (
-            <button
-              onClick={() => setShowLinterDrawer(!showLinterDrawer)}
-              className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded font-medium border transition cursor-pointer ${
-                lintReport.errors_count > 0
-                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
-                  : lintReport.warnings_count > 0
-                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
-                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-              }`}
-              title="Click to view HL7 v2 conformance and diagnostic report"
-            >
-              {lintReport.errors_count > 0 ? (
-                <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-              ) : lintReport.warnings_count > 0 ? (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              ) : (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              )}
-              <span className="hidden sm:inline">
-                {lintReport.errors_count > 0
-                  ? `${lintReport.errors_count} Issue${lintReport.errors_count > 1 ? 's' : ''}`
-                  : lintReport.warnings_count > 0
-                  ? `${lintReport.warnings_count} Warning${lintReport.warnings_count > 1 ? 's' : ''}`
-                  : `100% Compliant`}
-              </span>
-              <span className="text-[10px] opacity-75 font-mono">({lintReport.score}%)</span>
-              {showLinterDrawer ? (
-                <ChevronUp className="w-3 h-3 opacity-60" />
-              ) : (
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              )}
-            </button>
-          )}
-          <button
-            onClick={handleFormat}
-            disabled={!rawHL7.trim()}
-            className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 cursor-pointer disabled:opacity-50"
-            title="Clean whitespace and normalize segment delimiters"
-          >
-            <Wand2 className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">Format</span>
-          </button>
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 cursor-pointer"
-            title="Copy HL7 message"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-            <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
-          </button>
-          <button
-            onClick={() => setRawHL7('')}
-            className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-slate-100 hover:bg-rose-50/60 hover:text-rose-700 text-slate-600 transition border border-slate-200 hover:border-rose-200 cursor-pointer"
-            title="Clear text"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear</span>
-          </button>
+      <div className="panel-toolbar">
+        <div className="panel-toolbar-row">
+          <div className="panel-toolbar-title">
+            <Code className="w-4 h-4 text-panel-accent shrink-0" />
+            <h2>Clinical Message</h2>
+            <span className="panel-toolbar-count" title={`${lineCount} segments, ${charCount} characters`}>
+              {lineCount} seg
+            </span>
+          </div>
+          <div className="panel-toolbar-actions">
+            {rawHL7.trim() && (
+              <PanelButton
+                onClick={() => setShowLinterDrawer(!showLinterDrawer)}
+                tone={lintReport.errors_count > 0 ? 'danger' : lintReport.warnings_count > 0 ? 'warning' : 'safe'}
+                aria-label={`Conformance diagnostics: ${lintReport.score}%, ${lintReport.errors_count} errors, ${lintReport.warnings_count} warnings`}
+                aria-expanded={showLinterDrawer}
+                title={`Conformance diagnostics: ${lintReport.errors_count} errors, ${lintReport.warnings_count} warnings`}
+              >
+                {lintReport.errors_count > 0 ? <AlertCircle className="w-3.5 h-3.5" /> : lintReport.warnings_count > 0 ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                <span className="font-mono text-[11px]">{lintReport.score}%</span>
+              </PanelButton>
+            )}
+            <PanelButton iconOnly onClick={handleFormat} disabled={!rawHL7.trim()} aria-label="Format message" title="Format message">
+              <Wand2 className="w-3.5 h-3.5" />
+            </PanelButton>
+            <PanelButton iconOnly onClick={handleCopy} disabled={!rawHL7.trim()} aria-label={copied ? 'Message copied' : 'Copy message'} title={copied ? 'Copied' : 'Copy message'}>
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            </PanelButton>
+            <PanelButton iconOnly onClick={() => setRawHL7('')} disabled={!rawHL7.trim()} aria-label="Clear message" title="Clear message">
+              <Trash2 className="w-3.5 h-3.5" />
+            </PanelButton>
+          </div>
         </div>
       </div>
 
