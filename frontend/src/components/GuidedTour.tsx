@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Download,
   RotateCcw,
+  ClipboardPaste,
 } from 'lucide-react';
 import { PanelButton } from './PanelButton';
 import type { SyntheticPreset } from '../engine/syntheticGenerator';
@@ -32,10 +33,10 @@ const TOUR_STEPS: GuidedTourStep[] = [
   {
     id: 1,
     title: 'Clinical Ingestion & Structural Linting',
-    subtitle: 'HL7 v2.x Delimiter Detection & Conformance Auditing',
+    subtitle: 'Feed Ingestion, Delimiter Detection & Conformance Auditing',
     targetMode: 'structural',
     description:
-      'SemantiCare ingests clinical feeds with automatic delimiter parsing (| ^ ~ \\ &). The built-in HL7 linter audits required headers, patient identifiers, and UCUM units in real time, computing a quantitative Quality Score.',
+      'SemantiCare begins from an empty workspace. Click "Ingest Demo Feed" to copy and inject an HL7 v2.x clinical message, triggering automatic delimiter parsing (| ^ ~ \\ &), topology extraction, and real-time conformance scoring.',
     insights: [
       'Segment topology ribbon displays real-time sequence (MSH -> PID -> PV1 -> OBX)',
       'Deterministic AST parser handles any line break convention (CR, LF, CRLF)',
@@ -119,6 +120,7 @@ export interface GuidedTourProps {
   onResetToDefault?: () => void;
   conformanceScore?: number;
   unresolvedAmbiguitiesCount: number;
+  isMessageLoaded?: boolean;
 }
 
 export const GuidedTour: React.FC<GuidedTourProps> = ({
@@ -134,6 +136,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
   onResetToDefault,
   conformanceScore,
   unresolvedAmbiguitiesCount,
+  isMessageLoaded = false,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
@@ -161,9 +164,16 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
     setAutoPlaySecondsLeft(10);
     timerRef.current = setInterval(() => {
       setAutoPlaySecondsLeft((prev) => {
+        // After 2 seconds on Step 1, simulate ingesting the message into the blank canvas
+        if (currentStepIndex === 0 && !isMessageLoaded && prev === 8) {
+          onLoadSyntheticCase(activePreset);
+        }
         if (prev <= 1) {
           // Advance to next step
           setCurrentStepIndex((curr) => {
+            if (curr === 0 && !isMessageLoaded) {
+              onLoadSyntheticCase(activePreset);
+            }
             if (curr >= TOUR_STEPS.length - 1) {
               setIsAutoPlaying(false);
               return curr;
@@ -179,11 +189,14 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isOpen, isAutoPlaying, currentStepIndex]);
+  }, [isOpen, isAutoPlaying, currentStepIndex, isMessageLoaded, activePreset]);
 
   if (!isOpen) return null;
 
   const handleNext = () => {
+    if (currentStepIndex === 0 && !isMessageLoaded) {
+      onLoadSyntheticCase(activePreset);
+    }
     if (currentStepIndex < TOUR_STEPS.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
@@ -199,7 +212,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
 
   const handleStepAction = () => {
     if (step.id === 1) {
-      // Step 1: Re-load/re-lint synthetic case
+      // Step 1: Ingest synthetic case into the blank workspace
       onLoadSyntheticCase(activePreset);
       onSelectMode('structural');
     } else if (step.id === 2) {
@@ -231,10 +244,12 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
 
   const handleRestart = () => {
     setCurrentStepIndex(0);
-    onLoadSyntheticCase('golden_walkthrough');
     setActivePreset('golden_walkthrough');
     onSelectMode('structural');
     setIsAutoPlaying(false);
+    if (onResetToDefault) {
+      onResetToDefault();
+    }
   };
 
   return (
@@ -385,10 +400,16 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
                 type="button"
                 onClick={handleStepAction}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-xs shadow-2xs transition active:scale-[0.98] cursor-pointer"
-                title={`Perform interactive action: ${step.actionLabel}`}
+                title={`Perform interactive action: ${step.id === 1 && !isMessageLoaded ? 'Ingest Demo Feed' : step.actionLabel}`}
               >
-                {step.actionIcon}
-                <span>{step.actionLabel}</span>
+                {step.id === 1 && !isMessageLoaded ? (
+                  <ClipboardPaste className="w-3.5 h-3.5 text-sky-600" />
+                ) : (
+                  step.actionIcon
+                )}
+                <span>
+                  {step.id === 1 && !isMessageLoaded ? 'Ingest Demo Feed' : step.actionLabel}
+                </span>
               </button>
             )}
 

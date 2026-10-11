@@ -140,12 +140,8 @@ export const App: React.FC = () => {
   };
 
   const handleStartTour = () => {
-    const synthCase = generateSyntheticMessage('golden_walkthrough');
-    setActiveSample(synthCase);
-    setRawHL7(synthCase.raw);
-    setActiveMode('structural');
+    handleClearToBlank();
     setShowTour(true);
-    executePipeline(synthCase.raw, phiScrubbingEnabled);
   };
 
   const handleLoadSyntheticCase = (preset: SyntheticPreset) => {
@@ -621,6 +617,7 @@ export const App: React.FC = () => {
         onResetToDefault={handleResetToDefault}
         conformanceScore={validationResult?.conformance_score}
         unresolvedAmbiguitiesCount={unresolvedAmbiguities.length}
+        isMessageLoaded={!!rawHL7.trim()}
       />
     </div>
   );
