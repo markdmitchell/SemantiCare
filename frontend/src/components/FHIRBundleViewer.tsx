@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import type { MapHL7Response, AmbiguityFlag } from '../types/hl7';
 import Editor, { DiffEditor } from '@monaco-editor/react';
+import { PanelButton } from './PanelButton';
 import {
-  Sparkles,
+  SlidersHorizontal,
   ShieldCheck,
   Lock,
   Unlock,
@@ -36,10 +37,10 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
   mappingResult,
   onOpenPHIAudit,
   onSelectAmbiguity,
-  onOpenResolutionDeck,
   onDirectJsonEdit,
 }) => {
   const [viewMode, setViewMode] = useState<'cards' | 'json' | 'diff' | 'tree'>('cards');
+  const [showFilters, setShowFilters] = useState(false);
   const [useRehydrated, setUseRehydrated] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [selectedResourceType, setSelectedResourceType] = useState<string>('ALL');
@@ -235,193 +236,55 @@ export const FHIRBundleViewer: React.FC<FHIRBundleViewerProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 gap-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-600" />
-          <h2 className="font-semibold text-sm text-slate-700">Semantic FHIR R4 Bundle Studio</h2>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-medium">
-            {entries.length} Resources Generated
-          </span>
-        </div>
-
-        {/* View Controls & PHI Toggle */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* PHI Re-Hydration Toggle */}
-          <button
-            onClick={() => setUseRehydrated(!useRehydrated)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition border ${
-              useRehydrated
-                ? 'bg-rose-50/70 border-rose-300 text-rose-700'
-                : 'bg-emerald-50/70 border-emerald-300 text-emerald-700'
-            }`}
-            title={useRehydrated ? 'Showing Re-Hydrated Local PHI' : 'Showing De-Identified Synthetic Tokens'}
-          >
-            {useRehydrated ? (
-              <>
-                <Unlock className="w-3.5 h-3.5 text-rose-600" />
-                <span>Re-Hydrated PHI (Local)</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                <span>De-Identified [Tokens]</span>
-              </>
-            )}
-          </button>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition ${
-                viewMode === 'cards'
-                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Visual Cards</span>
-            </button>
-            <button
-              onClick={() => setViewMode('json')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
-                viewMode === 'json'
-                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>Monaco Editor</span>
-            </button>
-            <button
-              onClick={() => setViewMode('diff')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
-                viewMode === 'diff'
-                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-              title="Compare De-identified Token bundle with Re-hydrated PHI bundle side-by-side"
-            >
-              <GitCompare className="w-3.5 h-3.5" />
-              <span>Token Diff</span>
-            </button>
-            <button
-              onClick={() => setViewMode('tree')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
-                viewMode === 'tree'
-                  ? 'bg-sky-50 text-sky-700 border border-sky-200 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-              title="Interactive clinical resource hierarchy and provenance tree"
-            >
-              <Workflow className="w-3.5 h-3.5" />
-              <span>Provenance Tree</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Subheader: Confidence, Ambiguities, and PHI Redaction Audit Chips */}
-      <div className="px-4 py-2 bg-slate-50/50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-3">
-          {/* Confidence Indicator */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white border border-slate-200">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                mappingResult.confidence_score >= 90
-                  ? 'bg-emerald-400'
-                  : mappingResult.confidence_score >= 70
-                  ? 'bg-amber-400'
-                  : 'bg-rose-400'
-              }`}
-            />
-            <span className="text-slate-600">
-              Confidence:{' '}
-              <strong className="text-sky-700 font-mono">
-                {mappingResult.confidence_score}%
-              </strong>
+      <div className="panel-toolbar">
+        <div className="panel-toolbar-row panel-toolbar-row-fhir">
+          <div className="panel-toolbar-title">
+            <FileCode className="w-4 h-4 text-panel-accent shrink-0" />
+            <h2>FHIR R4 Bundle</h2>
+            <span className="panel-toolbar-count" title={`${entries.length} resources, ${mappingResult.confidence_score}% mapping confidence`}>
+              {entries.length} resources
             </span>
           </div>
-
-          {/* Ambiguities Alert */}
-          {mappingResult.ambiguities.length > 0 && (
-            <button
-              onClick={onOpenResolutionDeck}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50/60 border border-amber-200/80 text-amber-700 hover:bg-amber-100/60 transition"
-              title="Open Human-in-the-Loop Resolution Deck"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>
-                <strong>{mappingResult.ambiguities.filter((a) => !a.is_resolved).length}</strong>{' '}
-                Pending Ambiguities
-              </span>
-            </button>
-          )}
-
-          {/* PHI Redactions Chip */}
-          <button
-            onClick={onOpenPHIAudit}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50/60 border border-emerald-200/80 text-emerald-700 hover:bg-emerald-100/60 transition"
-            title="View PHI Redaction Audit"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>
-              <strong>{mappingResult.phi_audit.total_redactions}</strong> PHI Scrubbed
-            </span>
-          </button>
-        </div>
-
-        {/* Quick Resource Type Filter & Search Bar */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            <button
-              onClick={() => setSelectedResourceType('ALL')}
-              className={`text-[11px] px-2 py-0.5 rounded border transition cursor-pointer ${
-                selectedResourceType === 'ALL'
-                  ? 'bg-sky-50 border-sky-600 text-sky-700 font-semibold'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              All ({entries.length})
-            </button>
-            {mappingResult.resource_types.map((type) => {
-              const count = entries.filter((e) => e.resource?.resourceType === type).length;
-              return (
-                <button
-                  key={type}
-                  onClick={() => setSelectedResourceType(type)}
-                  className={`text-[11px] px-2 py-0.5 rounded border transition cursor-pointer ${
-                    selectedResourceType === type
-                      ? 'bg-sky-50 border-sky-600 text-sky-700 font-semibold'
-                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  {type} ({count})
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search resources..."
-              className="pl-7 pr-6 py-0.5 text-xs rounded-lg border border-slate-200 bg-white placeholder-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none w-44"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
+          <div className="panel-toolbar-actions">
+            <div className="panel-mode-controls" role="group" aria-label="Bundle view">
+              {([
+                ['cards', 'Cards', Layers, 'Clinical resource cards'],
+                ['json', 'JSON', FileCode, 'FHIR JSON editor'],
+                ['diff', 'Diff', GitCompare, 'Compare tokens with original patient information'],
+                ['tree', 'Tree', Workflow, 'Resource hierarchy and provenance'],
+              ] as const).map(([mode, label, Icon, tooltip]) => (
+                <PanelButton key={mode} onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode} title={tooltip}>
+                  <Icon className="w-3.5 h-3.5" /><span>{label}</span>
+                </PanelButton>
+              ))}
+            </div>
+            <PanelButton onClick={() => setUseRehydrated(!useRehydrated)} aria-pressed={useRehydrated} tone={useRehydrated ? 'danger' : 'safe'} title={useRehydrated ? 'Original patient information visible locally. Switch to protected tokens.' : 'Protected tokens visible. Show original patient information locally.'}>
+              {useRehydrated ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              <span>{useRehydrated ? 'Rehydrated' : 'Tokens'}</span>
+            </PanelButton>
+            <PanelButton iconOnly onClick={() => setShowFilters(!showFilters)} aria-label="Filter resources" aria-expanded={showFilters} aria-pressed={showFilters || selectedResourceType !== 'ALL' || !!searchQuery} title="Filter and search resources">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </PanelButton>
+            <PanelButton iconOnly onClick={onOpenPHIAudit} aria-label="Patient privacy audit" title="Patient privacy audit">
+              <ShieldCheck className="w-3.5 h-3.5" />
+            </PanelButton>
           </div>
         </div>
+        {showFilters && (
+          <div className="panel-filter-popover">
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="bundle-resource-type" className="text-xs font-medium">Resource type</label>
+              <PanelButton iconOnly onClick={() => setShowFilters(false)} aria-label="Close resource filters" title="Close filters"><X className="w-3.5 h-3.5" /></PanelButton>
+            </div>
+            <select id="bundle-resource-type" value={selectedResourceType} onChange={(e) => setSelectedResourceType(e.target.value)} className="w-full h-8 px-2 text-xs rounded border border-panel-border bg-panel-surface text-panel-text">
+              <option value="ALL">All ({entries.length})</option>
+              {mappingResult.resource_types.map((type) => <option key={type} value={type}>{type} ({entries.filter((e) => e.resource?.resourceType === type).length})</option>)}
+            </select>
+            <label htmlFor="bundle-resource-search" className="block text-xs font-medium mt-3 mb-1">Search</label>
+            <input id="bundle-resource-search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search resources..." className="w-full h-8 px-2 text-xs rounded border border-panel-border bg-panel-surface text-panel-text" />
+            <PanelButton onClick={() => { setSelectedResourceType('ALL'); setSearchQuery(''); }} className="mt-2" title="Reset resource filters"><RotateCcw className="w-3.5 h-3.5" />Reset</PanelButton>
+          </div>
+        )}
       </div>
 
       {/* Main Body */}
