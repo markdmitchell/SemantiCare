@@ -6,6 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com)
 [![HL7 FHIR](https://img.shields.io/badge/FHIR-R4_&_US_Core_3.1.1-E06A3B?style=flat-square&logo=fire&logoColor=white)](https://hl7.org/fhir/R4/)
+[![Version](https://img.shields.io/badge/Version-1.3.0-blue?style=flat-square)](CHANGELOG.md)
 
 A healthcare developer and clinical informaticist workbench designed to ingest legacy HL7 v2 clinical messages (ADT, ORU, MDM), parse them hierarchically, scrub protected health information (PHI) via a zero-trust reversible token vault, ground clinical terminology to standard LOINC/UCUM ontologies, translate to valid FHIR R4 bundles, surface semantic ambiguities through an interactive Human-in-the-Loop (HITL) resolution deck, and validate conformance against US Core 3.1.1 specifications.
 
@@ -17,6 +18,7 @@ Comprehensive technical, clinical, and operational documentation is available in
 
 | Document | Description |
 | :--- | :--- |
+| **[Release Changelog](file:///c:/Coding/Healthcare/CHANGELOG.md)** | Full version history, release notes, and feature additions across releases |
 | **[Clinical Informaticist & User Guide](file:///c:/Coding/Healthcare/docs/USER_GUIDE.md)** | Complete end-to-end platform guide: UI walkthrough, HITL deck, Mapping Memory, Clinical NLP, validation, and FHIR export |
 | **[System Architecture & Design](file:///c:/Coding/Healthcare/docs/ARCHITECTURE.md)** | Subsystem blueprints, zero-trust token vault, AST parser grammar, and grounded terminology models |
 | **[REST API Specification](file:///c:/Coding/Healthcare/docs/API_REFERENCE.md)** | Complete endpoint contracts, request/response models, cURL examples, batch processing, and push gateway |
@@ -187,6 +189,26 @@ Comprehensive technical, clinical, and operational documentation is available in
 * **Intelligent Hybrid Dual-Engine Architecture**:
   * Automatic backend detection (`http://127.0.0.1:8000/api/v1`) with zero-dependency in-browser TypeScript failover.
   * Real-time telemetry console displaying active mode, ping latency, capability checklist, and engine preference switching (`auto`, `backend`, `browser`).
+
+### Version 1.3: Interactive Guided Clinical Demo, Dynamic State Resets & Blank Workspace
+* **Interactive Guided Clinical Walkthrough & Demo Tour**:
+  * 5-step guided clinical tour (`GuidedTour.tsx`) highlighting the platform workflow from ingestion to bulk export with educational insights.
+  * 10-second auto-play timer with pause/resume controls and scenario preset selector (Golden Walkthrough, Cardiology Admission, Critical Panic Labs, HITL Ambiguity Showcase).
+* **Dynamic State Synchronization Across Tour Steps**:
+  * Centralized `goToStep` controller dynamically resetting workbench state across all forward and backward step transitions.
+  * Stepping back to Step 1 automatically restores the clean, blank workspace initial state.
+  * Stepping to Step 2 guarantees active zero-trust PHI token vault protection.
+  * Stepping to Step 3 dynamically restores clinical ambiguities back to their unreviewed baseline state.
+  * Steps 4 and 5 automatically ensure clinical case ingestion and align active workbench perspectives.
+* **Prominent Reset Workspace Controls**:
+  * Dedicated, 1-click `Reset Workspace` button in the top navigation bar adjacent to the workspace selector with dynamic active/clean state detection.
+  * Synchronized editor panel clear action ensuring instant, complete workspace reset in tandem.
+* **Blank Workspace First-Run Experience**:
+  * Clean, blank workspace on initial launch with an actionable Quick-Start card in `HL7InputPanel` (launch guided demo, load sample admission, or paste from clipboard).
+* **Refined Navigation & Workspace Selector Semantics**:
+  * Replaced "Load Scenario" with "Load Workspace", distinguishing blank custom HL7 workspace from curated clinical presets and on-the-fly synthesis.
+* **Two-Row Responsive Footer**:
+  * Restructured footer into two distinct horizontal rows separating brand identity and engine status from navigation links, terms, and modal dialog triggers.
 
 ---
 

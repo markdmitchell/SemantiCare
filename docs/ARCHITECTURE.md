@@ -157,6 +157,20 @@ When clinical data lacks essential semantic attributes, pure automation risks si
 
 ---
 
+### 3.8. Interactive Guided Tour Controller & State Synchronization Subsystem (v1.3)
+* **Centralized `goToStep` State Machine (`frontend/src/components/GuidedTour.tsx`)**:
+  * Coordinates bi-directional step navigation across Next, Previous, Direct Dot Clicks, Restart, and Auto-Play timer triggers.
+  * Enforces deterministic stage invariants across the five educational steps:
+    * **Step 1 (Ingestion & Linting)**: Dynamic rollback to the clean blank workspace (`onResetToDefault`).
+    * **Step 2 (Token Vault & Patient Banner)**: Enforces baseline zero-trust PHI token vault protection (`onTogglePhiScrubbing(true)`).
+    * **Step 3 (HITL Review)**: Restores unresolved ambiguities dynamically via pipeline re-execution (`onResetResolutions`) so informaticist decisions can be reviewed iteratively.
+    * **Steps 4 & 5 (Bundle Studio & Conformance)**: Ensures synthetic case readiness and aligns target workspace perspectives (`semantic`, `validation`).
+* **Prominent 1-Click Workspace Reset Subsystem**:
+  * Unified `handleClearToBlank` controller wiping editor payloads, AST segment models, FHIR transaction bundles, and patient demographics in tandem.
+  * State-aware header button (`.navbar-reset`) providing visual feedback between active message states and clean blank baselines.
+
+---
+
 ## 4. Technology Stack Matrix
 
 | Layer | Technology | Version | Purpose |

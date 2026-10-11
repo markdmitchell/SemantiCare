@@ -21,6 +21,7 @@ This guide walks you through every feature of the SemantiCare workbench, from in
    - [Step 8: FHIR R4 & US Core Conformance Validation](#step-8-fhir-r4--us-core-conformance-validation)
    - [Step 9: In-Browser Monaco JSON Editing & Live Mutation](#step-9-in-browser-monaco-json-editing--live-mutation)
    - [Step 10: Exporting Bundles & Transmitting to FHIR Stores](#step-10-exporting-bundles--transmitting-to-fhir-stores)
+   - [Step 11: Interactive Guided Clinical Demo & Walkthrough](#step-11-interactive-guided-clinical-demo--walkthrough)
 4. [Curated Clinical Scenarios Guide](#4-curated-clinical-scenarios-guide)
 5. [Institutional Knowledge Base & ConceptMap Interoperability](#5-institutional-knowledge-base--conceptmap-interoperability)
 6. [Best Practices & Informaticist Tips](#6-best-practices--informaticist-tips)
@@ -48,43 +49,51 @@ SemantiCare automates the translation of legacy HL7 v2 feeds into standard FHIR 
 
 ## 2. User Interface Tour
 
-The SemantiCare application interface is organized into five functional regions:
+The SemantiCare application interface is organized into cohesive functional regions designed for high-throughput informaticist productivity:
 
 ```
 +-----------------------------------------------------------------------------------+
-|  [Logo] SemantiCare    [Structural AST] [Resolution Deck (N)] [FHIR Studio] [Val] |  <-- Top Navbar
-|                        [Export] [Facility Badge] [Memory (N)] [Roadmap]           |
+| [Logo] SemantiCare  [Structure] [Review (N)] [FHIR R4] [Validation (Score%)]      | <-- Top Navbar
+|                     [Guided Demo] [Load workspace...] [Reset Workspace] [...] [Export]|
 +-----------------------------------------------------------------------------------+
-|  [Scenario 1: ADT^A01] [Scenario 2: ORU Lab] [Scenario 3: Vitals] [Scen 4] [Scen 5]|  <-- Scenario Bar
+| [Patient Demographics Banner: Demographics, MRN, Encounter, PHI Status, Metrics]  | <-- Patient Banner
 +------------------------------------------+----------------------------------------+
 |                                          |                                        |
 |  LEFT PANE: INGESTION & CONTROLS         |  RIGHT PANE: ACTIVE PERSPECTIVE        |
 |                                          |                                        |
-|  * Raw HL7 Textarea                      |  Perspective 1: Structural Tree (AST)  |
-|  * Delimiter Detection Chips             |  Perspective 2: Resolution Deck (HITL) |
-|  * Zero-Trust PHI Toggle                 |  Perspective 3: FHIR R4 Studio Viewer  |
-|  * [Parse HL7] & [Map to FHIR R4]        |  Perspective 4: Validation Inspector   |
-|  * PHI Audit Drawer Trigger              |                                        |
+|  * Message Editor (with Seg / Line Count)|  Perspective 1: Structure (AST Tree)   |
+|  * Conformance Diagnostics Drawer Trigger|  Perspective 2: Review (HITL Deck)     |
+|  * Quick-Start Card (When Workspace Blank|  Perspective 3: FHIR R4 Bundle Studio  |
+|  * Segment Topology Ribbon               |  Perspective 4: US Core Conformance    |
+|  * Reversible PHI Protection Toggle      |                                        |
+|  * [Reset Workspace / Trash] & [Format]  |                                        |
 |                                          |                                        |
 +------------------------------------------+----------------------------------------+
+| Bottom Footer: (Row 1) Brand, Engine Status | (Row 2) Docs, Privacy, Terms, GitHub |
++-----------------------------------------------------------------------------------+
 ```
 
 ### 1. Top Navbar
-- **Brand & Health**: Displays backend connection status (FastAPI Online / Offline).
-- **Perspective Switcher**: Switch between **Structural AST**, **Resolution Deck**, **FHIR R4 Studio**, and **Validation**.
-- **Unresolved Flags Counter**: Amber badge displaying pending clinical ambiguities requiring human decision.
-- **Conformance Score Meter**: Real-time percentage indicator of FHIR R4 compliance.
-- **Export Trigger**: Launches the dual-flavor export modal (De-Identified vs. Re-Hydrated).
-- **Mapping Memory Button**: Opens the Institutional Rulebase Management modal, displaying the active rule count.
+- **Brand & Engine Indicator**: Displays SemantiCare brand identity and active engine status (FastAPI Backend / In-Browser Web Engine).
+- **Perspective Tabs**: Switch between **Structure** (AST tree), **Review** (HITL ambiguity deck), **FHIR R4** (bundle studio), and **Validation** (US Core inspector).
+- **Unresolved Ambiguities Counter**: Amber badge displaying pending clinical ambiguities requiring human decision.
+- **Conformance Score Meter**: Real-time percentage indicator of FHIR R4 and US Core compliance.
+- **Guided Demo Button**: Launches the 5-step interactive clinical tour with auto-advance and scenario preset switching.
+- **Load Workspace Selector**: Native selector offering immediate access to the **Blank Workspace (Custom HL7)**, curated hospital scenarios, or random synthetic case generation.
+- **Reset Workspace Button**: Dedicated 1-click button adjacent to the workspace selector that wipes the active case, clears patient demographics, and restores the blank workspace.
+- **More Tools (`...`)**: Compact overflow menu providing access to Batch Studio, Institutional Memory, Engine Status, Roadmap, and Documentation.
+- **Export Trigger**: Launches the dual-flavor export studio (De-Identified vs. Re-Hydrated FHIR bundles).
 
-### 2. Clinical Scenario Picker Bar
-- One-click access to curated inpatient, outpatient, laboratory, radiology, and cardiology message test cases.
+### 2. Clinical Patient Demographics Banner
+- Renders when a parsed message is loaded in the workspace.
+- Displays patient name, sex, DOB, calculated age, MRN, hospital encounter classification, attending physician, and security guardrail badges.
 
 ### 3. Left Ingestion Panel
 - Multi-line editor for entering, pasting, or modifying HL7 v2 payloads.
-- Live delimiter indicator chips (`Field: |`, `Component: ^`, `Repetition: ~`, `Escape: \`, `Subcomponent: &`).
-- Zero-Trust PHI toggle switch.
-- Action buttons: **Parse Structure Only** and **Map to FHIR R4**.
+- **Blank Workspace Quick-Start Card**: Rendered when the workspace is empty, offering 1-click shortcuts to launch the guided demo, load sample admissions, or paste from clipboard.
+- Live Segment Topology Ribbon tracking segment sequences (`MSH -> PID -> PV1 -> OBX`).
+- Reversible zero-trust PHI protection toggle switch.
+- Toolbar controls: **Diagnostics Drawer Trigger**, **Format & Indent**, **Copy Payload**, and **Reset Workspace (Trash)**.
 
 ### 4. Right Studio Pane
 - Multi-view workspace displaying the selected perspective with synchronized state across tabs.
@@ -95,15 +104,15 @@ The SemantiCare application interface is organized into five functional regions:
 
 ### Step 1: Selecting or Entering an HL7 v2 Message
 
-1. **Using Sample Messages**:
-   - Click any button in the top **Clinical Scenario Bar** (e.g. *ORU^R01 - Vital Signs with Semantic Ambiguities*).
-   - SemantiCare automatically populates the left textarea, parses the header, and executes the semantic mapping pipeline.
-2. **Entering Custom Messages**:
-   - Paste any valid or proprietary HL7 v2 message directly into the left **Raw HL7 v2 Message** editor.
-   - SemantiCare handles all standard line terminators (`\r\n`, `\r`, `\n`) seamlessly.
-3. **Triggering Structural Parse vs. Full Semantic Mapping**:
-   - Click **Parse Structure Only** to analyze delimiters and view the AST without generating FHIR resources.
-   - Click **Map to FHIR R4** to run the complete pipeline: PHI de-identification $\rightarrow$ AST parsing $\rightarrow$ ontology grounding $\rightarrow$ Clinical NLP extraction $\rightarrow$ FHIR Bundle construction $\rightarrow$ validation.
+1. **Starting with a Blank Workspace**:
+   - SemantiCare initializes with a clean, blank workspace.
+   - Use the **Quick-Start Card** to paste an HL7 message from your clipboard, load a curated hospital admission, or click **Start Guided Demo**.
+2. **Loading Curated Clinical Scenarios**:
+   - Use the **Load workspace** dropdown in the top navbar to choose from 5 pre-configured clinical admissions (e.g. *Cardiology Admission*, *Critical Panic Labs*, *Messy Vitals*).
+3. **Resetting the Workspace**:
+   - Click the prominent **Reset Workspace** button in the top navbar or the trash icon in the Clinical Message editor to return to a clean, blank workspace anytime.
+4. **Triggering Structural Parse vs. Full Semantic Mapping**:
+   - Press `Ctrl + Enter` (or `Cmd + Enter`) in the message editor or click **Map to FHIR R4** to run the complete pipeline: PHI de-identification $\rightarrow$ AST parsing $\rightarrow$ ontology grounding $\rightarrow$ Clinical NLP extraction $\rightarrow$ FHIR Bundle construction $\rightarrow$ validation.
 
 ---
 
@@ -290,6 +299,27 @@ When your mapping and validation are complete:
    - Enter your Bearer token if authentication is enabled.
    - Click **Transmit Bundle**.
    - Review live HTTP response codes (`200 OK`, `201 Created`) and server transaction responses.
+
+### Step 11: Interactive Guided Clinical Demo & Walkthrough
+
+1. **Launching the Tour**:
+   - Click **Guided Demo** in the top navigation bar or **Start Guided Demo** on the blank workspace quick-start card.
+   - The interactive tour panel opens in the lower viewport.
+2. **Navigating Steps**:
+   - Step 1: **Clinical Ingestion & Structural Linting** (Demonstrates feed ingestion from blank canvas and delimiter parsing).
+   - Step 2: **EHR Patient Banner & Zero-Trust Token Vault** (Shows surrogate tokens vs. re-hydrated identity).
+   - Step 3: **Human-in-the-Loop Ambiguity Resolution** (Surfaces missing UCUM units and local terminology for informaticist review).
+   - Step 4: **Semantic FHIR R4 Bundle Studio** (Inspects resource cards, JSON Monaco diff, and DAG provenance tree).
+   - Step 5: **US Core 3.1.1 Conformance & Bulk Export** (Validates 100% US Core compliance and bulk export).
+3. **Dynamic State Synchronization**:
+   - Stepping back to Step 1 automatically resets the workspace to blank.
+   - Stepping to Step 2 guarantees PHI protection is active.
+   - Stepping to Step 3 dynamically resets resolved ambiguities back to unreviewed so informaticist review can be demonstrated repeatedly.
+4. **Auto-Play Mode**:
+   - Click the **Play** button in the tour header to begin a 10-second automatic progression through all five phases.
+   - Pause or resume anytime.
+5. **Finishing and Resetting**:
+   - Click **Finish & Reset** on Step 5 to clear the workspace and close the tour, or **Finish & Keep Case** to retain the mapped bundle for further exploration.
 
 ---
 

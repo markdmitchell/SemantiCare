@@ -9,7 +9,7 @@ from app.api.routes import router as api_router
 app = FastAPI(
     title="SemantiCare API • HL7 v2 to FHIR R4 Semantic Mapper",
     description="Backend engine for parsing HL7 v2, zero-trust PHI redaction, ontology grounding, and semantic translation to FHIR R4.",
-    version="1.0.0",
+    version="1.3.0",
 )
 
 # Enable CORS for local Vite development server
