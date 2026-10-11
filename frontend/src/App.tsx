@@ -24,6 +24,8 @@ import { InstitutionalRulesModal } from './components/InstitutionalRulesModal';
 import { UserGuideModal } from './components/UserGuideModal';
 import { EngineStatusModal } from './components/EngineStatusModal';
 import { BatchProcessorModal } from './components/BatchProcessorModal';
+import { GuidedTour } from './components/GuidedTour';
+import { generateSyntheticMessage, type SyntheticPreset } from './engine/syntheticGenerator';
 import { FooterPagesModal, type FooterTab } from './components/FooterPagesModal';
 import { Footer } from './components/Footer';
 import { LabResultsFlowsheet } from './components/LabResultsFlowsheet';
@@ -45,7 +47,7 @@ export const App: React.FC = () => {
   const [phiScrubbingEnabled, setPhiScrubbingEnabled] = useState<boolean>(true);
   const [selectedProfile, setSelectedProfile] = useState<string>('us-core');
 
-  // Modals
+  // Modals & Guided Tour
   const [inspectingField, setInspectingField] = useState<{ segment: HL7Segment; field: HL7Field } | null>(null);
   const [showPHIAudit, setShowPHIAudit] = useState<boolean>(false);
   const [selectedAmbiguity, setSelectedAmbiguity] = useState<AmbiguityFlag | null>(null);
@@ -55,6 +57,7 @@ export const App: React.FC = () => {
   const [showUserGuide, setShowUserGuide] = useState<boolean>(false);
   const [showEngineModal, setShowEngineModal] = useState<boolean>(false);
   const [showBatchModal, setShowBatchModal] = useState<boolean>(false);
+  const [showTour, setShowTour] = useState<boolean>(false);
   const [footerModalTab, setFooterModalTab] = useState<FooterTab | null>(null);
   const [rulesCount, setRulesCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -100,15 +103,16 @@ export const App: React.FC = () => {
     init();
   }, []);
 
-  const executePipeline = async (hl7Content: string) => {
+  const executePipeline = async (hl7Content: string, phiScrubbing?: boolean) => {
     setLoading(true);
     setMappingLoading(true);
     setErrorMessage(null);
+    const scrub = phiScrubbing !== undefined ? phiScrubbing : phiScrubbingEnabled;
 
     try {
       const [parseRes, mapRes] = await Promise.all([
         parseHL7(hl7Content),
-        mapHL7(hl7Content, phiScrubbingEnabled),
+        mapHL7(hl7Content, scrub),
       ]);
       setParseResult(parseRes);
       setMappingResult(mapRes);
@@ -133,6 +137,98 @@ export const App: React.FC = () => {
     } finally {
       setLoading(false);
       setMappingLoading(false);
+    }
+  };
+
+  const handleTogglePhiScrubbing = (enabled: boolean) => {
+    setPhiScrubbingEnabled(enabled);
+    executePipeline(rawHL7, enabled);
+  };
+
+  const handleStartTour = () => {
+    const synthCase = generateSyntheticMessage('golden_walkthrough');
+    setActiveSample(synthCase);
+    setRawHL7(synthCase.raw);
+    setActiveMode('structural');
+    setShowTour(true);
+    executePipeline(synthCase.raw, phiScrubbingEnabled);
+  };
+
+  const handleLoadSyntheticCase = (preset: SyntheticPreset) => {
+    const synthCase = generateSyntheticMessage(preset);
+    setActiveSample(synthCase);
+    setRawHL7(synthCase.raw);
+    setErrorMessage(null);
+    executePipeline(synthCase.raw, phiScrubbingEnabled);
+  };
+
+  const handleGenerateRandomCase = () => {
+    const presets: SyntheticPreset[] = ['cardiology', 'critical_lab', 'hitl_showcase'];
+    const chosen = presets[Math.floor(Math.random() * presets.length)];
+    handleLoadSyntheticCase(chosen);
+  };
+
+  const handleResolveAmbiguitiesDemo = () => {
+    if (!mappingResult?.ambiguities) return;
+    const updated = JSON.parse(JSON.stringify(mappingResult)) as MapHL7Response;
+    let anyChanged = false;
+
+    const updateResourceInBundle = (bundle: any, amb: AmbiguityFlag, resolvedValue: string) => {
+      if (!bundle?.entry) return;
+      for (const entry of bundle.entry) {
+        const res = entry.resource;
+        if (res && res.id === amb.target_resource_id) {
+          if (amb.type === 'MISSING_UNIT' && res.valueQuantity) {
+            res.valueQuantity.unit = resolvedValue;
+            res.valueQuantity.code = resolvedValue;
+            res.valueQuantity.system = 'http://unitsofmeasure.org';
+          } else if (amb.type === 'LOCAL_TERMINOLOGY') {
+            const codeMatch = resolvedValue.split(' - ')[0]?.trim();
+            const displayMatch = resolvedValue.split(' - ')[1]?.trim();
+            if (res.code?.coding?.[0]) {
+              res.code.coding[0].code = codeMatch || res.code.coding[0].code;
+              res.code.coding[0].display = displayMatch || res.code.coding[0].display;
+              res.code.text = displayMatch || res.code.text;
+            }
+          }
+        }
+      }
+    };
+
+    for (const amb of updated.ambiguities) {
+      if (!amb.is_resolved) {
+        const choice = amb.default_choice || (amb.suggested_options && amb.suggested_options[0]) || 'Verified Value';
+        amb.is_resolved = true;
+        amb.resolved_value = choice;
+        amb.resolved_by = 'Guided Informaticist Tour';
+        updateResourceInBundle(updated.fhir_bundle, amb, choice);
+        updateResourceInBundle(updated.rehydrated_bundle, amb, choice);
+
+        if (updated.resource_confidences && updated.resource_confidences[amb.target_resource_id]) {
+          updated.resource_confidences[amb.target_resource_id].level = 'high';
+          updated.resource_confidences[amb.target_resource_id].score = 100;
+          updated.resource_confidences[amb.target_resource_id].reason = `Clinician Verified: ${choice}`;
+        }
+        anyChanged = true;
+      }
+    }
+
+    if (!anyChanged) return;
+
+    const totalAmbiguities = updated.ambiguities.length;
+    const resolvedCount = updated.ambiguities.filter((a) => a.is_resolved).length;
+    if (totalAmbiguities > 0) {
+      const baseScore = 90;
+      const boost = Math.round((resolvedCount / totalAmbiguities) * 10);
+      updated.confidence_score = Math.min(100, baseScore + boost);
+    }
+
+    setMappingResult(updated);
+
+    if (updated.fhir_bundle) {
+      validateFHIRBundle(updated.fhir_bundle, selectedProfile).then((vr) => {
+        setValidationResult(vr);
+      });
     }
   };
 
@@ -313,6 +409,8 @@ export const App: React.FC = () => {
         onOpenUserGuide={() => setShowUserGuide(true)}
         onOpenEngineModal={() => setShowEngineModal(true)}
         onOpenBatchModal={() => setShowBatchModal(true)}
+        onStartTour={handleStartTour}
+        onGenerateSynthetic={handleGenerateRandomCase}
       />
 
       <ClinicalPatientBanner
@@ -357,7 +455,7 @@ export const App: React.FC = () => {
             loading={loading}
             mappingLoading={mappingLoading}
             phiScrubbingEnabled={phiScrubbingEnabled}
-            setPhiScrubbingEnabled={setPhiScrubbingEnabled}
+            setPhiScrubbingEnabled={handleTogglePhiScrubbing}
             delimiters={parseResult?.metadata?.delimiters}
             activeSample={activeSample}
           />
@@ -489,6 +587,21 @@ export const App: React.FC = () => {
           onClose={() => setFooterModalTab(null)}
         />
       )}
+
+      {/* Interactive Guided Demo and Clinical Walkthrough */}
+      <GuidedTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        activeMode={activeMode}
+        onSelectMode={(mode) => setActiveMode(mode)}
+        phiScrubbingEnabled={phiScrubbingEnabled}
+        onTogglePhiScrubbing={handleTogglePhiScrubbing}
+        onLoadSyntheticCase={handleLoadSyntheticCase}
+        onResolveAmbiguitiesDemo={handleResolveAmbiguitiesDemo}
+        onOpenExportModal={() => setShowExportModal(true)}
+        conformanceScore={validationResult?.conformance_score}
+        unresolvedAmbiguitiesCount={unresolvedAmbiguities.length}
+      />
     </div>
   );
 };

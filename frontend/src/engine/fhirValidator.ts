@@ -2,7 +2,7 @@
  * High-Speed FHIR R4 & US Core Conformance Validator
  * Ported 1:1 from backend/app/validator/fhir_validator.py
  */
-import { validateUcum } from './loincCatalog';
+import { validateUcum } from './loincCatalog.ts';
 import type { ValidationIssue, ValidationResult } from '../types/hl7';
 
 export function validateFhirBundle(bundleData: any, profile: string = 'us-core'): ValidationResult & {

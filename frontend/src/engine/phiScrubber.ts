@@ -61,6 +61,14 @@ export class TokenVault {
     return result;
   }
 
+  rehydrateString(text: string): string {
+    return this.rehydrateText(text);
+  }
+
+  count(): number {
+    return this.detectedEntities.length;
+  }
+
   rehydrateData(data: any): any {
     if (typeof data === 'string') {
       return this.rehydrateText(data);

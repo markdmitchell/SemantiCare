@@ -3,11 +3,11 @@
  * Ported 1:1 from app/engine/mapper.py
  */
 import type { HL7Segment } from '../types/hl7';
-import { lookupLoinc, matchTerminology, validateUcum, inferMissingUnitCandidates } from './loincCatalog';
-import type { TokenVault } from './phiScrubber';
+import { lookupLoinc, matchTerminology, validateUcum, inferMissingUnitCandidates } from './loincCatalog.ts';
+import type { TokenVault } from './phiScrubber.ts';
 import type { AmbiguityFlag, MappingLineage, ResourceConfidence } from '../types/hl7';
-import { findMatchingRule, incrementRuleUsage } from './rulesStore';
-import { extractEntitiesFromNte } from './clinicalNer';
+import { findMatchingRule, incrementRuleUsage } from './rulesStore.ts';
+import { extractEntitiesFromNte } from './clinicalNer.ts';
 
 function uuidHex(len: number): string {
   const bytes = new Uint8Array(Math.ceil(len / 2));

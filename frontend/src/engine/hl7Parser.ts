@@ -2,7 +2,7 @@
  * High-Fidelity HL7 v2 Structural Parser
  * Ported 1:1 from app/core/hl7_parser.py
  */
-import { getSegmentInfo, getFieldInfo, getComponentName } from './hl7Dictionary';
+import { getSegmentInfo, getFieldInfo, getComponentName } from './hl7Dictionary.ts';
 import type { HL7Metadata, HL7Segment, HL7Field, HL7Repetition, HL7Component, ParseHL7Response } from '../types/hl7';
 
 export interface HL7Delimiters {
