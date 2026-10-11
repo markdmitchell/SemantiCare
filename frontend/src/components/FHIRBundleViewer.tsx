@@ -10,7 +10,6 @@ import {
   Download,
   Copy,
   Check,
-  AlertTriangle,
   FileCode,
   Layers,
   Activity,
