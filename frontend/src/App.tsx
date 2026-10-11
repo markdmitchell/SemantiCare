@@ -87,13 +87,7 @@ export const App: React.FC = () => {
       try {
         const sampleList = await fetchSamples();
         setSamples(sampleList);
-        if (sampleList.length > 0) {
-          const defaultSample = sampleList[0];
-          setActiveSample(defaultSample);
-          setRawHL7(defaultSample.raw);
-          // Initial mapping, parsing, and validation
-          executePipeline(defaultSample.raw);
-        }
+        // Start from a clean, blank scenario on initial load
       } catch (err) {
         console.error('Failed to load clinical samples:', err);
         setErrorMessage('Failed to initialize clinical samples.');
@@ -168,17 +162,25 @@ export const App: React.FC = () => {
     handleLoadSyntheticCase(chosen);
   };
 
-  const handleResetToDefault = () => {
-    setShowTour(false);
-    setPhiScrubbingEnabled(true);
-    setActiveMode('structural');
+  const handleClearToBlank = () => {
+    setActiveSample(null);
+    setRawHL7('');
+    setParseResult(null);
+    setMappingResult(null);
+    setValidationResult(null);
     setErrorMessage(null);
+    setShowTour(false);
+    setActiveMode('structural');
+  };
+
+  const handleLoadDefaultSample = () => {
     if (samples.length > 0) {
-      const defaultSample = samples[0];
-      setActiveSample(defaultSample);
-      setRawHL7(defaultSample.raw);
-      executePipeline(defaultSample.raw, true);
+      handleSelectSample(samples[0]);
     }
+  };
+
+  const handleResetToDefault = () => {
+    handleClearToBlank();
   };
 
   const handleResolveAmbiguitiesDemo = () => {
@@ -425,6 +427,7 @@ export const App: React.FC = () => {
         onStartTour={handleStartTour}
         onGenerateSynthetic={handleGenerateRandomCase}
         onResetToDefault={handleResetToDefault}
+        onClearToBlank={handleClearToBlank}
       />
 
       <ClinicalPatientBanner
@@ -472,6 +475,8 @@ export const App: React.FC = () => {
             setPhiScrubbingEnabled={handleTogglePhiScrubbing}
             delimiters={parseResult?.metadata?.delimiters}
             activeSample={activeSample}
+            onStartTour={handleStartTour}
+            onLoadDefaultSample={handleLoadDefaultSample}
           />
         </section>
 

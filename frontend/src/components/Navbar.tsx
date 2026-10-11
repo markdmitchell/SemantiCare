@@ -30,13 +30,14 @@ interface NavbarProps {
   onStartTour?: () => void;
   onGenerateSynthetic?: () => void;
   onResetToDefault?: () => void;
+  onClearToBlank?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
   canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
   onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal, onOpenBatchModal,
-  onStartTour, onGenerateSynthetic, onResetToDefault,
+  onStartTour, onGenerateSynthetic, onResetToDefault, onClearToBlank,
 }) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -104,16 +105,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <select
               aria-label="Clinical scenario"
               className="navbar-scenario"
-              value={samples.some(s => s.id === selectedSampleId) ? selectedSampleId : ''}
-              title={samples.find(s => s.id === selectedSampleId)?.description || 'Clinical scenario'}
+              value={samples.some(s => s.id === selectedSampleId) ? selectedSampleId : selectedSampleId ? '' : '__BLANK__'}
+              title={samples.find(s => s.id === selectedSampleId)?.description || (selectedSampleId ? 'Clinical scenario' : 'Blank canvas')}
               onChange={event => {
                 const val = event.target.value;
                 if (val === '__START_TOUR__') {
                   onStartTour?.();
                 } else if (val === '__GENERATE_SYNTHETIC__') {
                   onGenerateSynthetic?.();
-                } else if (val === '__RESET__') {
-                  onResetToDefault?.();
+                } else if (val === '__RESET__' || val === '__BLANK__') {
+                  if (onClearToBlank) onClearToBlank();
+                  else onResetToDefault?.();
                 } else {
                   const sample = samples.find(s => s.id === val);
                   if (sample) onSelectSample?.(sample);
@@ -121,10 +123,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               <option value="" disabled>Clinical scenario</option>
+              <optgroup label="Workspace">
+                <option value="__BLANK__">📄 Blank Canvas (Custom HL7)</option>
+              </optgroup>
               <optgroup label="Interactive Walkthrough">
                 <option value="__START_TOUR__">✨ Start Guided Demo...</option>
                 <option value="__GENERATE_SYNTHETIC__">🎲 Generate New Synthetic Case...</option>
-                {onResetToDefault && <option value="__RESET__">↺ Reset to Default Scenario</option>}
+                {onResetToDefault && <option value="__RESET__">↺ Reset to Blank Canvas</option>}
               </optgroup>
               <optgroup label="Curated Clinical Scenarios">
                 {samples.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}
@@ -141,7 +146,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}>
                 {onStartTour && <PanelButton onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
                 {onGenerateSynthetic && <PanelButton onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
-                {onResetToDefault && <PanelButton onClick={() => openTool(onResetToDefault)}><RotateCcw className="w-4 h-4" />Reset Workspace</PanelButton>}
+                {(onClearToBlank || onResetToDefault) && (
+                  <PanelButton onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
+                    <RotateCcw className="w-4 h-4" />
+                    New Blank Canvas
+                  </PanelButton>
+                )}
                 {onOpenBatchModal && <PanelButton onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
                 <PanelButton onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
                 <PanelButton onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>

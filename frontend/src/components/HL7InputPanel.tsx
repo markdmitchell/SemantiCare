@@ -18,6 +18,9 @@ import {
   Info,
   CheckCircle2,
   X,
+  FileCode,
+  Clipboard,
+  Hospital,
 } from 'lucide-react';
 
 interface HL7InputPanelProps {
@@ -31,6 +34,8 @@ interface HL7InputPanelProps {
   setPhiScrubbingEnabled: (val: boolean) => void;
   delimiters?: HL7Delimiters;
   activeSample?: HL7Sample | null;
+  onStartTour?: () => void;
+  onLoadDefaultSample?: () => void;
 }
 
 const tagColor = (tag: string) => {
@@ -54,6 +59,8 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
   setPhiScrubbingEnabled,
   delimiters,
   activeSample,
+  onStartTour,
+  onLoadDefaultSample,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showDelims, setShowDelims] = useState(false);
@@ -304,7 +311,7 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
 
       {/* Raw HL7 Input Area with Line Numbers */}
       <div className="relative flex-1 p-2 bg-slate-50 flex flex-col min-h-0">
-        <div className="flex flex-1 min-h-0 bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50">
+        <div className="relative flex flex-1 min-h-0 bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50">
           {/* Line Numbers Gutter */}
           <div
             ref={gutterRef}
@@ -322,10 +329,77 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
             onChange={(e) => setRawHL7(e.target.value)}
             onScroll={handleScroll}
             onKeyDown={handleKeyDown}
-            placeholder="Paste raw HL7 v2 message here (e.g. MSH|^~\&|...)... or select a clinical scenario above."
-            className="flex-1 p-3 font-mono text-xs text-slate-800 bg-transparent outline-none resize-none leading-relaxed selection:bg-sky-100 selection:text-sky-800 overflow-y-auto whitespace-pre"
+            placeholder={rawHL7 ? '' : 'Paste raw HL7 v2 message here (e.g. MSH|^~\\&|...)... or select a clinical scenario above.'}
+            className="flex-1 p-3 font-mono text-xs text-slate-800 bg-transparent outline-none resize-none leading-relaxed selection:bg-sky-100 selection:text-sky-800 overflow-y-auto whitespace-pre z-10"
             spellCheck={false}
           />
+
+          {/* Quick-Start Blank Canvas Card when empty */}
+          {!rawHL7.trim() && !loading && !mappingLoading && (
+            <div
+              onClick={() => textareaRef.current?.focus()}
+              className="absolute inset-0 left-9 flex flex-col items-center justify-center p-6 text-center bg-white/95 cursor-text z-20"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center mb-3 shadow-xs">
+                <FileCode className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">
+                Awaiting Clinical Message
+              </h3>
+              <p className="text-slate-500 text-xs max-w-xs leading-relaxed mb-4">
+                Paste an HL7 v2.x clinical message, load a curated hospital admission scenario, or start the guided demo.
+              </p>
+
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xs"
+              >
+                {onStartTour && (
+                  <button
+                    type="button"
+                    onClick={onStartTour}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold shadow-2xs transition active:scale-[0.98] cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+                    <span>Start Guided Demo</span>
+                  </button>
+                )}
+                {onLoadDefaultSample && (
+                  <button
+                    type="button"
+                    onClick={onLoadDefaultSample}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-medium shadow-2xs transition active:scale-[0.98] cursor-pointer"
+                  >
+                    <Hospital className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Load Sample Admission</span>
+                  </button>
+                )}
+              </div>
+
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="mt-3.5 flex items-center gap-1.5 text-[11px] text-slate-400"
+              >
+                <span>or</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text && text.trim()) setRawHL7(text);
+                    } catch {
+                      textareaRef.current?.focus();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-medium underline cursor-pointer"
+                >
+                  <Clipboard className="w-3 h-3" />
+                  <span>paste from clipboard</span>
+                </button>
+                <span>or click to type</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
