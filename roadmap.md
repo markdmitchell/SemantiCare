@@ -1,0 +1,3 @@
+- [ ] Simplify the Clinical Message header.
+- [ ] Consolidate the FHIR header while preserving its controls.
+- [ ] Verify both headers and their actions in the browser.
