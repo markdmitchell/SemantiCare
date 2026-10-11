@@ -103,15 +103,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
           {samples.length > 0 && (
             <select
-              aria-label="Clinical scenario"
+              aria-label="Load clinical scenario"
               className="navbar-scenario"
               value={samples.some(s => s.id === selectedSampleId) ? selectedSampleId : selectedSampleId ? '' : '__BLANK__'}
-              title={samples.find(s => s.id === selectedSampleId)?.description || (selectedSampleId ? 'Clinical scenario' : 'Blank canvas')}
+              title={samples.find(s => s.id === selectedSampleId)?.description || (selectedSampleId ? 'Active clinical scenario' : 'Load clinical scenario')}
               onChange={event => {
                 const val = event.target.value;
-                if (val === '__START_TOUR__') {
-                  onStartTour?.();
-                } else if (val === '__GENERATE_SYNTHETIC__') {
+                if (val === '__GENERATE_SYNTHETIC__') {
                   onGenerateSynthetic?.();
                 } else if (val === '__RESET__' || val === '__BLANK__') {
                   if (onClearToBlank) onClearToBlank();
@@ -122,18 +120,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }
               }}
             >
-              <option value="" disabled>Clinical scenario</option>
+              <option value="" disabled>Load scenario...</option>
               <optgroup label="Workspace">
                 <option value="__BLANK__">📄 Blank Canvas (Custom HL7)</option>
               </optgroup>
-              <optgroup label="Interactive Walkthrough">
-                <option value="__START_TOUR__">✨ Start Guided Demo...</option>
-                <option value="__GENERATE_SYNTHETIC__">🎲 Generate New Synthetic Case...</option>
-                {onResetToDefault && <option value="__RESET__">↺ Reset to Blank Canvas</option>}
-              </optgroup>
               <optgroup label="Curated Clinical Scenarios">
-                {samples.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}
+                {samples.map(sample => (
+                  <option key={sample.id} value={sample.id}>
+                    Load: {sample.title}
+                  </option>
+                ))}
               </optgroup>
+              {onGenerateSynthetic && (
+                <optgroup label="On-The-Fly Synthesis">
+                  <option value="__GENERATE_SYNTHETIC__">🎲 Generate Random Synthetic Case...</option>
+                </optgroup>
+              )}
             </select>
           )}
           <div className="relative" ref={toolsRef}>
