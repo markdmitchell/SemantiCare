@@ -103,10 +103,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
           {samples.length > 0 && (
             <select
-              aria-label="Load clinical scenario"
+              aria-label="Load workspace"
               className="navbar-scenario"
               value={samples.some(s => s.id === selectedSampleId) ? selectedSampleId : selectedSampleId ? '' : '__BLANK__'}
-              title={samples.find(s => s.id === selectedSampleId)?.description || (selectedSampleId ? 'Active clinical scenario' : 'Load clinical scenario')}
+              title={samples.find(s => s.id === selectedSampleId)?.description || (selectedSampleId ? 'Active clinical scenario' : 'Load workspace')}
               onChange={event => {
                 const val = event.target.value;
                 if (val === '__GENERATE_SYNTHETIC__') {
@@ -120,9 +120,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }
               }}
             >
-              <option value="" disabled>Load scenario...</option>
+              <option value="" disabled>Load workspace...</option>
               <optgroup label="Workspace">
-                <option value="__BLANK__">📄 Blank Canvas (Custom HL7)</option>
+                <option value="__BLANK__">📄 Blank Workspace (Custom HL7)</option>
               </optgroup>
               <optgroup label="Curated Clinical Scenarios">
                 {samples.map(sample => (
@@ -151,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {(onClearToBlank || onResetToDefault) && (
                   <PanelButton onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
                     <RotateCcw className="w-4 h-4" />
-                    New Blank Canvas
+                    New Blank Workspace
                   </PanelButton>
                 )}
                 {onOpenBatchModal && <PanelButton onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}

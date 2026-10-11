@@ -116,6 +116,7 @@ export interface GuidedTourProps {
   onTogglePhiScrubbing: (enabled: boolean) => void;
   onLoadSyntheticCase: (preset: SyntheticPreset) => void;
   onResolveAmbiguitiesDemo?: () => void;
+  onResetResolutions?: () => void;
   onOpenExportModal?: () => void;
   onResetToDefault?: () => void;
   conformanceScore?: number;
@@ -132,6 +133,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
   onTogglePhiScrubbing,
   onLoadSyntheticCase,
   onResolveAmbiguitiesDemo,
+  onResetResolutions,
   onOpenExportModal,
   onResetToDefault,
   conformanceScore,
@@ -154,7 +156,38 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
     }
   }, [isOpen, currentStepIndex, step.targetMode]);
 
-  // Handle auto-advance timer
+  // Synchronize and reset state across steps
+  const goToStep = (targetIndex: number) => {
+    if (targetIndex < 0 || targetIndex >= TOUR_STEPS.length) return;
+
+    if (targetIndex === 0) {
+      // Step 1: Blank workspace initial state
+      if (onResetToDefault) {
+        onResetToDefault();
+      }
+    } else {
+      // Steps 2-5: Ensure clinical message is ingested
+      if (!isMessageLoaded) {
+        onLoadSyntheticCase(activePreset);
+      }
+      if (targetIndex === 1) {
+        // Step 2: Ensure PHI protection baseline is active
+        if (!phiScrubbingEnabled) {
+          onTogglePhiScrubbing(true);
+        }
+      } else if (targetIndex === 2) {
+        // Step 3: Reset ambiguities back to unresolved for HITL review
+        if (onResetResolutions) {
+          onResetResolutions();
+        }
+      }
+    }
+
+    setCurrentStepIndex(targetIndex);
+    onSelectMode(TOUR_STEPS[targetIndex].targetMode);
+  };
+
+  // Handle auto-advance timer countdown
   useEffect(() => {
     if (!isOpen || !isAutoPlaying) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -164,23 +197,9 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
     setAutoPlaySecondsLeft(10);
     timerRef.current = setInterval(() => {
       setAutoPlaySecondsLeft((prev) => {
-        // After 2 seconds on Step 1, simulate ingesting the message into the blank canvas
+        // After 2 seconds on Step 1, simulate ingesting the message into the blank workspace
         if (currentStepIndex === 0 && !isMessageLoaded && prev === 8) {
           onLoadSyntheticCase(activePreset);
-        }
-        if (prev <= 1) {
-          // Advance to next step
-          setCurrentStepIndex((curr) => {
-            if (curr === 0 && !isMessageLoaded) {
-              onLoadSyntheticCase(activePreset);
-            }
-            if (curr >= TOUR_STEPS.length - 1) {
-              setIsAutoPlaying(false);
-              return curr;
-            }
-            return curr + 1;
-          });
-          return 10;
         }
         return prev - 1;
       });
@@ -191,14 +210,23 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
     };
   }, [isOpen, isAutoPlaying, currentStepIndex, isMessageLoaded, activePreset]);
 
+  // Handle auto-advance step progression when countdown reaches 0
+  useEffect(() => {
+    if (!isOpen || !isAutoPlaying) return;
+    if (autoPlaySecondsLeft <= 0) {
+      if (currentStepIndex >= TOUR_STEPS.length - 1) {
+        setIsAutoPlaying(false);
+      } else {
+        goToStep(currentStepIndex + 1);
+      }
+    }
+  }, [autoPlaySecondsLeft, isOpen, isAutoPlaying, currentStepIndex]);
+
   if (!isOpen) return null;
 
   const handleNext = () => {
-    if (currentStepIndex === 0 && !isMessageLoaded) {
-      onLoadSyntheticCase(activePreset);
-    }
     if (currentStepIndex < TOUR_STEPS.length - 1) {
-      setCurrentStepIndex(currentStepIndex + 1);
+      goToStep(currentStepIndex + 1);
     } else {
       onClose();
     }
@@ -206,7 +234,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
 
   const handlePrevious = () => {
     if (currentStepIndex > 0) {
-      setCurrentStepIndex(currentStepIndex - 1);
+      goToStep(currentStepIndex - 1);
     }
   };
 
@@ -239,17 +267,15 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
 
   const handlePresetChange = (preset: SyntheticPreset) => {
     setActivePreset(preset);
-    onLoadSyntheticCase(preset);
+    if (currentStepIndex > 0 || isMessageLoaded) {
+      onLoadSyntheticCase(preset);
+    }
   };
 
   const handleRestart = () => {
-    setCurrentStepIndex(0);
-    setActivePreset('golden_walkthrough');
-    onSelectMode('structural');
     setIsAutoPlaying(false);
-    if (onResetToDefault) {
-      onResetToDefault();
-    }
+    setActivePreset('golden_walkthrough');
+    goToStep(0);
   };
 
   return (
@@ -316,7 +342,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
           {TOUR_STEPS.map((s, idx) => (
             <button
               key={s.id}
-              onClick={() => setCurrentStepIndex(idx)}
+              onClick={() => goToStep(idx)}
               className={`h-1.5 rounded-full transition-all cursor-pointer ${
                 idx === currentStepIndex
                   ? 'flex-1 bg-sky-600'
@@ -418,9 +444,10 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
                 type="button"
                 onClick={() => {
                   onResetToDefault();
+                  onClose();
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-xs shadow-2xs transition active:scale-[0.98] cursor-pointer"
-                title="Finish guided demo and restore baseline scenario with PHI protection enabled"
+                title="Finish guided demo and restore blank workspace"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
                 <span>Finish & Reset</span>

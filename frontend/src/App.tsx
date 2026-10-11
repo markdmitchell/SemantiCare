@@ -140,7 +140,7 @@ export const App: React.FC = () => {
   };
 
   const handleStartTour = () => {
-    handleClearToBlank();
+    handleClearToBlank(true);
     setShowTour(true);
   };
 
@@ -158,14 +158,16 @@ export const App: React.FC = () => {
     handleLoadSyntheticCase(chosen);
   };
 
-  const handleClearToBlank = () => {
+  const handleClearToBlank = (keepTour = false) => {
     setActiveSample(null);
     setRawHL7('');
     setParseResult(null);
     setMappingResult(null);
     setValidationResult(null);
     setErrorMessage(null);
-    setShowTour(false);
+    if (!keepTour) {
+      setShowTour(false);
+    }
     setActiveMode('structural');
   };
 
@@ -176,7 +178,13 @@ export const App: React.FC = () => {
   };
 
   const handleResetToDefault = () => {
-    handleClearToBlank();
+    handleClearToBlank(true);
+  };
+
+  const handleResetResolutions = () => {
+    if (rawHL7.trim()) {
+      executePipeline(rawHL7, phiScrubbingEnabled);
+    }
   };
 
   const handleResolveAmbiguitiesDemo = () => {
@@ -423,7 +431,7 @@ export const App: React.FC = () => {
         onStartTour={handleStartTour}
         onGenerateSynthetic={handleGenerateRandomCase}
         onResetToDefault={handleResetToDefault}
-        onClearToBlank={handleClearToBlank}
+        onClearToBlank={() => handleClearToBlank(false)}
       />
 
       <ClinicalPatientBanner
@@ -613,6 +621,7 @@ export const App: React.FC = () => {
         onTogglePhiScrubbing={handleTogglePhiScrubbing}
         onLoadSyntheticCase={handleLoadSyntheticCase}
         onResolveAmbiguitiesDemo={handleResolveAmbiguitiesDemo}
+        onResetResolutions={handleResetResolutions}
         onOpenExportModal={() => setShowExportModal(true)}
         onResetToDefault={handleResetToDefault}
         conformanceScore={validationResult?.conformance_score}
