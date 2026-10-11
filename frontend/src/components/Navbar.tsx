@@ -97,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               <option value="" disabled>Clinical scenario</option>
-              {samples.map(sample => <option key={sample.id} value={sample.id}>{sample.title.split(' - ')[0]}</option>)}
+              {samples.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}
             </select>
           )}
           <div className="relative" ref={toolsRef}>
