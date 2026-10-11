@@ -116,6 +116,7 @@ export interface GuidedTourProps {
   onLoadSyntheticCase: (preset: SyntheticPreset) => void;
   onResolveAmbiguitiesDemo?: () => void;
   onOpenExportModal?: () => void;
+  onResetToDefault?: () => void;
   conformanceScore?: number;
   unresolvedAmbiguitiesCount: number;
 }
@@ -130,6 +131,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
   onLoadSyntheticCase,
   onResolveAmbiguitiesDemo,
   onOpenExportModal,
+  onResetToDefault,
   conformanceScore,
   unresolvedAmbiguitiesCount,
 }) => {
@@ -390,12 +392,26 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
               </button>
             )}
 
+            {currentStepIndex === TOUR_STEPS.length - 1 && onResetToDefault && (
+              <button
+                type="button"
+                onClick={() => {
+                  onResetToDefault();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-xs shadow-2xs transition active:scale-[0.98] cursor-pointer"
+                title="Finish guided demo and restore baseline scenario with PHI protection enabled"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                <span>Finish & Reset</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleNext}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-sky-700 hover:bg-sky-600 text-white font-medium text-xs shadow-sm transition active:scale-[0.98] cursor-pointer"
             >
-              <span>{currentStepIndex === TOUR_STEPS.length - 1 ? 'Finish Tour' : 'Next Step'}</span>
+              <span>{currentStepIndex === TOUR_STEPS.length - 1 ? 'Finish & Keep Case' : 'Next Step'}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>

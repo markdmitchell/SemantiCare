@@ -168,6 +168,19 @@ export const App: React.FC = () => {
     handleLoadSyntheticCase(chosen);
   };
 
+  const handleResetToDefault = () => {
+    setShowTour(false);
+    setPhiScrubbingEnabled(true);
+    setActiveMode('structural');
+    setErrorMessage(null);
+    if (samples.length > 0) {
+      const defaultSample = samples[0];
+      setActiveSample(defaultSample);
+      setRawHL7(defaultSample.raw);
+      executePipeline(defaultSample.raw, true);
+    }
+  };
+
   const handleResolveAmbiguitiesDemo = () => {
     if (!mappingResult?.ambiguities) return;
     const updated = JSON.parse(JSON.stringify(mappingResult)) as MapHL7Response;
@@ -411,6 +424,7 @@ export const App: React.FC = () => {
         onOpenBatchModal={() => setShowBatchModal(true)}
         onStartTour={handleStartTour}
         onGenerateSynthetic={handleGenerateRandomCase}
+        onResetToDefault={handleResetToDefault}
       />
 
       <ClinicalPatientBanner
@@ -599,6 +613,7 @@ export const App: React.FC = () => {
         onLoadSyntheticCase={handleLoadSyntheticCase}
         onResolveAmbiguitiesDemo={handleResolveAmbiguitiesDemo}
         onOpenExportModal={() => setShowExportModal(true)}
+        onResetToDefault={handleResetToDefault}
         conformanceScore={validationResult?.conformance_score}
         unresolvedAmbiguitiesCount={unresolvedAmbiguities.length}
       />

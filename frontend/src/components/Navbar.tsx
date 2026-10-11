@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BookOpen, Layers, Sparkles, AlertTriangle, FileCheck, Download, Database, GitBranch,
-  MoreHorizontal, Activity, Wand2,
+  MoreHorizontal, Activity, Wand2, RotateCcw,
 } from 'lucide-react';
 import { PanelButton } from './PanelButton';
 import type { HL7Sample } from '../types/hl7';
@@ -29,13 +29,14 @@ interface NavbarProps {
   onOpenBatchModal?: () => void;
   onStartTour?: () => void;
   onGenerateSynthetic?: () => void;
+  onResetToDefault?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
   canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
   onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal, onOpenBatchModal,
-  onStartTour, onGenerateSynthetic,
+  onStartTour, onGenerateSynthetic, onResetToDefault,
 }) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -111,6 +112,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onStartTour?.();
                 } else if (val === '__GENERATE_SYNTHETIC__') {
                   onGenerateSynthetic?.();
+                } else if (val === '__RESET__') {
+                  onResetToDefault?.();
                 } else {
                   const sample = samples.find(s => s.id === val);
                   if (sample) onSelectSample?.(sample);
@@ -121,6 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <optgroup label="Interactive Walkthrough">
                 <option value="__START_TOUR__">✨ Start Guided Demo...</option>
                 <option value="__GENERATE_SYNTHETIC__">🎲 Generate New Synthetic Case...</option>
+                {onResetToDefault && <option value="__RESET__">↺ Reset to Default Scenario</option>}
               </optgroup>
               <optgroup label="Curated Clinical Scenarios">
                 {samples.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}
@@ -137,6 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}>
                 {onStartTour && <PanelButton onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
                 {onGenerateSynthetic && <PanelButton onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
+                {onResetToDefault && <PanelButton onClick={() => openTool(onResetToDefault)}><RotateCcw className="w-4 h-4" />Reset Workspace</PanelButton>}
                 {onOpenBatchModal && <PanelButton onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
                 <PanelButton onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
                 <PanelButton onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>
