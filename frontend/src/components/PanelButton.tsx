@@ -1,6 +1,7 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, Ref } from 'react';
 
 type PanelButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  ref?: Ref<HTMLButtonElement>;
   iconOnly?: boolean;
   tone?: 'safe' | 'warning' | 'danger';
 };

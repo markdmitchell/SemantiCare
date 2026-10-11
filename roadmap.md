@@ -1,3 +1,5 @@
 - [x] Simplify the Clinical Message header.
 - [x] Consolidate the FHIR header while preserving its controls.
 - [x] Verify both headers and their actions in the browser.
+- [x] Consolidate the Navbar with a compact scenario selector and overflow tools menu.
+- [ ] Verify navigation, sample selection, and all retained tools in the browser.
