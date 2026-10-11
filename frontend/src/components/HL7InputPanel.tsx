@@ -28,6 +28,7 @@ interface HL7InputPanelProps {
   setRawHL7: (val: string) => void;
   onParse: () => void;
   onMapToFHIR: () => void;
+  onClearToBlank?: () => void;
   loading: boolean;
   mappingLoading: boolean;
   phiScrubbingEnabled: boolean;
@@ -53,6 +54,7 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
   setRawHL7,
   onParse,
   onMapToFHIR,
+  onClearToBlank,
   loading,
   mappingLoading,
   phiScrubbingEnabled,
@@ -154,7 +156,16 @@ export const HL7InputPanel: React.FC<HL7InputPanelProps> = ({
             <PanelButton iconOnly onClick={handleCopy} disabled={!rawHL7.trim()} aria-label={copied ? 'Message copied' : 'Copy message'} title={copied ? 'Copied' : 'Copy message'}>
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </PanelButton>
-            <PanelButton iconOnly onClick={() => setRawHL7('')} disabled={!rawHL7.trim()} aria-label="Clear message" title="Clear message">
+            <PanelButton
+              iconOnly
+              onClick={() => {
+                if (onClearToBlank) onClearToBlank();
+                else setRawHL7('');
+              }}
+              disabled={!rawHL7.trim()}
+              aria-label="Reset workspace and clear message"
+              title="Reset workspace and clear message"
+            >
               <Trash2 className="w-3.5 h-3.5" />
             </PanelButton>
           </div>

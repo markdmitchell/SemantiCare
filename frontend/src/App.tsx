@@ -405,6 +405,7 @@ export const App: React.FC = () => {
   };
 
   const unresolvedAmbiguities = mappingResult?.ambiguities.filter((a) => !a.is_resolved) || [];
+  const hasWorkspaceContent = !!rawHL7.trim() || !!activeSample || !!parseResult || !!mappingResult;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-900">
@@ -417,6 +418,7 @@ export const App: React.FC = () => {
         unresolvedAmbiguitiesCount={unresolvedAmbiguities.length}
         conformanceScore={validationResult?.conformance_score}
         canExport={!!mappingResult?.fhir_bundle}
+        hasContent={hasWorkspaceContent}
         rulesCount={rulesCount}
         samples={samples}
         selectedSampleId={activeSample?.id || ''}
@@ -473,6 +475,7 @@ export const App: React.FC = () => {
             }}
             onParse={handleParseOnly}
             onMapToFHIR={handleMapOnly}
+            onClearToBlank={() => handleClearToBlank(false)}
             loading={loading}
             mappingLoading={mappingLoading}
             phiScrubbingEnabled={phiScrubbingEnabled}

@@ -16,6 +16,7 @@ interface NavbarProps {
   unresolvedAmbiguitiesCount: number;
   conformanceScore?: number;
   canExport?: boolean;
+  hasContent?: boolean;
   rulesCount?: number;
   samples?: HL7Sample[];
   selectedSampleId?: string;
@@ -35,7 +36,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   backendOnline, totalSegments, messageType, activeMode, unresolvedAmbiguitiesCount, conformanceScore,
-  canExport = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
+  canExport = false, hasContent = false, rulesCount = 0, samples = [], selectedSampleId, onSelectSample,
   onToggleMode, onOpenHowItWorks, onOpenExport, onOpenRulesModal, onOpenUserGuide, onOpenEngineModal, onOpenBatchModal,
   onStartTour, onGenerateSynthetic, onResetToDefault, onClearToBlank,
 }) => {
@@ -137,6 +138,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </optgroup>
               )}
             </select>
+          )}
+          {(onClearToBlank || onResetToDefault) && (
+            <PanelButton
+              onClick={() => {
+                if (onClearToBlank) onClearToBlank();
+                else onResetToDefault?.();
+              }}
+              disabled={!hasContent}
+              className="navbar-reset"
+              title={hasContent ? 'Reset workspace to clean blank state' : 'Workspace is clean'}
+              aria-label="Reset workspace"
+            >
+              <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Reset Workspace</span>
+              <span className="sm:hidden">Reset</span>
+            </PanelButton>
           )}
           <div className="relative" ref={toolsRef}>
             <PanelButton ref={triggerRef} iconOnly aria-label="More tools" title="More tools" aria-expanded={toolsOpen} aria-controls="navbar-tools" onClick={() => setToolsOpen(!toolsOpen)}>
