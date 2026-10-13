@@ -465,6 +465,9 @@ export const App: React.FC = () => {
 
       {/* Main Split-Pane Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-3 grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <h1 className="lg:col-span-12 text-sm font-semibold text-slate-700">
+          HL7 v2 to FHIR R4 Semantic Mapping Workbench
+        </h1>
         {/* Left Pane: Ingestion & Controls (5 cols on lg) */}
         <section className="lg:col-span-5 h-[calc(100vh-270px)] min-h-[540px]">
           <HL7InputPanel
