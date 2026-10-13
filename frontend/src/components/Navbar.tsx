@@ -42,7 +42,42 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const menuItems = () =>
+    Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
+
+  const focusItem = (index: number) => {
+    const items = menuItems();
+    if (items.length) items[(index + items.length) % items.length].focus();
+  };
+
+  const openMenu = (focus: 'first' | 'last' = 'first') => {
+    setToolsOpen(true);
+    requestAnimationFrame(() => focusItem(focus === 'first' ? 0 : menuItems().length - 1));
+  };
+
+  const onTriggerKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toolsOpen ? focusItem(0) : openMenu('first');
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      toolsOpen ? focusItem(menuItems().length - 1) : openMenu('last');
+    }
+  };
+
+  const onMenuKeyDown = (event: React.KeyboardEvent) => {
+    const items = menuItems();
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (event.key === 'ArrowDown') { event.preventDefault(); focusItem(index + 1); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); focusItem(index - 1); }
+    else if (event.key === 'Home') { event.preventDefault(); focusItem(0); }
+    else if (event.key === 'End') { event.preventDefault(); focusItem(items.length - 1); }
+    else if (event.key === 'Tab') { setToolsOpen(false); }
+  };
+
   useEffect(() => {
     if (!toolsOpen) return;
     const dismiss = (event: PointerEvent) => {
@@ -156,26 +191,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             </PanelButton>
           )}
           <div className="relative" ref={toolsRef}>
-            <PanelButton ref={triggerRef} iconOnly aria-label="More tools" title="More tools" aria-expanded={toolsOpen} aria-controls="navbar-tools" onClick={() => setToolsOpen(!toolsOpen)}>
+            <PanelButton ref={triggerRef} iconOnly aria-label="More tools" title="More tools" aria-haspopup="menu" aria-expanded={toolsOpen} aria-controls="navbar-tools" onClick={() => setToolsOpen(!toolsOpen)} onKeyDown={onTriggerKeyDown}>
               <MoreHorizontal className="w-4 h-4" />
             </PanelButton>
             {toolsOpen && (
-              <div id="navbar-tools" className="navbar-tools" onBlur={event => {
+              <div id="navbar-tools" className="navbar-tools" role="menu" aria-label="More tools" ref={menuRef} onKeyDown={onMenuKeyDown} onBlur={event => {
                 if (!event.currentTarget.parentElement?.contains(event.relatedTarget)) setToolsOpen(false);
               }}>
-                {onStartTour && <PanelButton onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
-                {onGenerateSynthetic && <PanelButton onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
+                {onStartTour && <PanelButton role="menuitem" onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
+                {onGenerateSynthetic && <PanelButton role="menuitem" onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
                 {(onClearToBlank || onResetToDefault) && (
-                  <PanelButton onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
+                  <PanelButton role="menuitem" onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
                     <RotateCcw className="w-4 h-4" />
                     New Blank Workspace
                   </PanelButton>
                 )}
-                {onOpenBatchModal && <PanelButton onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
-                <PanelButton onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
-                <PanelButton onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>
-                <PanelButton onClick={() => openTool(onOpenHowItWorks)}><GitBranch className="w-4 h-4" />Roadmap</PanelButton>
-                {onOpenEngineModal && <PanelButton onClick={() => openTool(onOpenEngineModal)}><Activity className="w-4 h-4" />{backendOnline ? 'FastAPI Engine' : 'Browser Engine'}</PanelButton>}
+                {onOpenBatchModal && <PanelButton role="menuitem" onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenHowItWorks)}><GitBranch className="w-4 h-4" />Roadmap</PanelButton>
+                {onOpenEngineModal && <PanelButton role="menuitem" onClick={() => openTool(onOpenEngineModal)}><Activity className="w-4 h-4" />{backendOnline ? 'FastAPI Engine' : 'Browser Engine'}</PanelButton>}
                 {messageType && <div className="navbar-engine-detail">{messageType} · {totalSegments} segments</div>}
               </div>
             )}
