@@ -198,19 +198,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div id="navbar-tools" className="navbar-tools" role="menu" aria-label="More tools" ref={menuRef} onKeyDown={onMenuKeyDown} onBlur={event => {
                 if (!event.currentTarget.parentElement?.contains(event.relatedTarget)) setToolsOpen(false);
               }}>
-                {onStartTour && <PanelButton onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
-                {onGenerateSynthetic && <PanelButton onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
+                {onStartTour && <PanelButton role="menuitem" onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
+                {onGenerateSynthetic && <PanelButton role="menuitem" onClick={() => openTool(onGenerateSynthetic)}><Wand2 className="w-4 h-4" />Generate Case</PanelButton>}
                 {(onClearToBlank || onResetToDefault) && (
-                  <PanelButton onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
+                  <PanelButton role="menuitem" onClick={() => openTool(onClearToBlank || onResetToDefault!)}>
                     <RotateCcw className="w-4 h-4" />
                     New Blank Workspace
                   </PanelButton>
                 )}
-                {onOpenBatchModal && <PanelButton onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
-                <PanelButton onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
-                <PanelButton onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>
-                <PanelButton onClick={() => openTool(onOpenHowItWorks)}><GitBranch className="w-4 h-4" />Roadmap</PanelButton>
-                {onOpenEngineModal && <PanelButton onClick={() => openTool(onOpenEngineModal)}><Activity className="w-4 h-4" />{backendOnline ? 'FastAPI Engine' : 'Browser Engine'}</PanelButton>}
+                {onOpenBatchModal && <PanelButton role="menuitem" onClick={() => openTool(onOpenBatchModal)}><Layers className="w-4 h-4" />Batch Studio</PanelButton>}
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenRulesModal)}><Database className="w-4 h-4" />Memory{rulesCount > 0 && <span className="ml-auto font-mono text-[11px]">{rulesCount}</span>}</PanelButton>
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenUserGuide)}><BookOpen className="w-4 h-4" />User guide</PanelButton>
+                <PanelButton role="menuitem" onClick={() => openTool(onOpenHowItWorks)}><GitBranch className="w-4 h-4" />Roadmap</PanelButton>
+                {onOpenEngineModal && <PanelButton role="menuitem" onClick={() => openTool(onOpenEngineModal)}><Activity className="w-4 h-4" />{backendOnline ? 'FastAPI Engine' : 'Browser Engine'}</PanelButton>}
                 {messageType && <div className="navbar-engine-detail">{messageType} · {totalSegments} segments</div>}
               </div>
             )}
