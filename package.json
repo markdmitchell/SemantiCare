@@ -1,0 +1,12 @@
+{
+  "name": "semanticare-root",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "install:frontend": "npm --prefix frontend install --include=dev --no-audit --no-fund",
+    "dev": "npm --prefix frontend run dev -- --port 8080 --host 0.0.0.0",
+    "build": "node scripts/build.mjs",
+    "build:dev": "node scripts/build.mjs"
+  }
+}
