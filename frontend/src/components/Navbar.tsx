@@ -42,7 +42,42 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const menuItems = () =>
+    Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
+
+  const focusItem = (index: number) => {
+    const items = menuItems();
+    if (items.length) items[(index + items.length) % items.length].focus();
+  };
+
+  const openMenu = (focus: 'first' | 'last' = 'first') => {
+    setToolsOpen(true);
+    requestAnimationFrame(() => focusItem(focus === 'first' ? 0 : menuItems().length - 1));
+  };
+
+  const onTriggerKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toolsOpen ? focusItem(0) : openMenu('first');
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      toolsOpen ? focusItem(menuItems().length - 1) : openMenu('last');
+    }
+  };
+
+  const onMenuKeyDown = (event: React.KeyboardEvent) => {
+    const items = menuItems();
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (event.key === 'ArrowDown') { event.preventDefault(); focusItem(index + 1); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); focusItem(index - 1); }
+    else if (event.key === 'Home') { event.preventDefault(); focusItem(0); }
+    else if (event.key === 'End') { event.preventDefault(); focusItem(items.length - 1); }
+    else if (event.key === 'Tab') { setToolsOpen(false); }
+  };
+
   useEffect(() => {
     if (!toolsOpen) return;
     const dismiss = (event: PointerEvent) => {
