@@ -191,11 +191,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </PanelButton>
           )}
           <div className="relative" ref={toolsRef}>
-            <PanelButton ref={triggerRef} iconOnly aria-label="More tools" title="More tools" aria-expanded={toolsOpen} aria-controls="navbar-tools" onClick={() => setToolsOpen(!toolsOpen)}>
+            <PanelButton ref={triggerRef} iconOnly aria-label="More tools" title="More tools" aria-haspopup="menu" aria-expanded={toolsOpen} aria-controls="navbar-tools" onClick={() => setToolsOpen(!toolsOpen)} onKeyDown={onTriggerKeyDown}>
               <MoreHorizontal className="w-4 h-4" />
             </PanelButton>
             {toolsOpen && (
-              <div id="navbar-tools" className="navbar-tools" onBlur={event => {
+              <div id="navbar-tools" className="navbar-tools" role="menu" aria-label="More tools" ref={menuRef} onKeyDown={onMenuKeyDown} onBlur={event => {
                 if (!event.currentTarget.parentElement?.contains(event.relatedTarget)) setToolsOpen(false);
               }}>
                 {onStartTour && <PanelButton onClick={() => openTool(onStartTour)}><Sparkles className="w-4 h-4 text-panel-accent" />Guided Demo</PanelButton>}
