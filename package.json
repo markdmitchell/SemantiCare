@@ -8,5 +8,13 @@
     "dev": "npm --prefix frontend run dev -- --port 8080 --host 0.0.0.0",
     "build": "node scripts/build.mjs",
     "build:dev": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.x",
+    "drizzle-orm": "0.x",
+    "postgres": "^3.4.9"
   }
 }
