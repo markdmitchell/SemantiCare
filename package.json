@@ -10,11 +10,30 @@
     "build:dev": "node scripts/build.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0"
+    "@ai-sdk/openai": "^3",
+    "@lovable.dev/vite-tanstack-config": "^2.26.7",
+    "@monaco-editor/react": "^4.7.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-router": "^1.170.45",
+    "@tanstack/react-start": "^1.169.3",
+    "ai": "^6",
+    "lucide-react": "^1.59.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "tailwindcss": "^4",
+    "vite": "^7",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "drizzle-kit": "0.x",
     "drizzle-orm": "0.x",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
   }
 }
