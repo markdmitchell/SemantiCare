@@ -45,6 +45,9 @@ export async function handleValidationExplanation(request: Request) {
   if (paused) return Response.json({ error: paused.message }, { status: paused.status });
 
   const gateway = createLovableAiGatewayRunIdFetch();
+  const cancellation = new AbortController();
+  request.signal.addEventListener('abort', () => cancellation.abort(), { once: true });
+  let gatewayFailure: string | undefined;
   let settleHeaders: (result: { status: number; message?: string; headers?: Headers }) => void = () => {};
   const ready = new Promise<{ status: number; message?: string; headers?: Headers }>(resolve => { settleHeaders = resolve; });
   const provider = createOpenAI({
@@ -56,6 +59,7 @@ export async function handleValidationExplanation(request: Request) {
         let body: unknown;
         try { body = await response.clone().json(); } catch { body = null; }
         const message = safeError(body);
+        gatewayFailure = message;
         if (response.status === 402 || response.status === 403) {
           await stateClient.from('ai_service_state').upsert({ id: 'validation', status: response.status, message, updated_at: new Date().toISOString() });
         }
@@ -65,7 +69,7 @@ export async function handleValidationExplanation(request: Request) {
     },
   });
   const result = streamText({
-    model: provider.responses('openai/gpt-6-astra'), maxRetries: 0, abortSignal: request.signal,
+    model: provider.responses('openai/gpt-6-astra'), maxRetries: 0, abortSignal: cancellation.signal,
     providerOptions: { openai: { forceReasoning: true, reasoningEffort: 'low', reasoningSummary: 'auto', store: false, include: ['reasoning.encrypted_content'] } },
     system: `You assist clinical informaticists investigating HL7 v2 to FHIR R4 validation failures. Input contains only structural failure categories, no patient data. This workbench uses a limited custom rule set, not the official HL7 FHIR validator. Do not describe every application finding as a normative FHIR error: resource id may be optional in some contexts, units depend on the quantity, US Core depends on exact profile/version, and race/ethnicity guidance must be checked against the implementation guide. For each supplied issue number, explain what to inspect, distinguish error from warning, identify relevant HL7 source fields (PID-3, PID-5, PID-8, OBX-2/3/5/6/11, PV1-2 as appropriate), and give concrete manual mapping or FHIR JSON edits and a revalidation step. You cannot see actual values, specimen, timing, or references. Never invent patient values, fabricate clinical units or race/ethnicity, or claim certification. Use concise plain text, numbered sections, no markdown tables, no em dashes. About 600 words maximum. End with a short reminder to review changes clinically and verify against the official validator and exact selected profile. Recommendations only, nothing is applied.`,
     messages: [{ role: 'user', content: JSON.stringify(input) }],
@@ -81,7 +85,8 @@ export async function handleValidationExplanation(request: Request) {
           else if (part.type === 'reasoning-delta') emit({ type: 'reasoning', text: part.text });
           else if (part.type === 'error') {
             settleHeaders({ status: request.signal.aborted ? 499 : 502 });
-            emit({ type: 'error', message: request.signal.aborted ? 'Request stopped.' : 'The AI request ended unexpectedly. No changes were applied.' });
+            emit({ type: 'error', message: request.signal.aborted ? 'Request stopped.' : gatewayFailure || 'The AI request ended unexpectedly. No changes were applied.' });
+            break;
           }
         }
         if (!text.trim()) emit({ type: 'error', message: 'The AI service returned no explanation or declined the request. No changes were applied.' });
@@ -89,8 +94,9 @@ export async function handleValidationExplanation(request: Request) {
       } catch {
         settleHeaders({ status: request.signal.aborted ? 499 : 502 });
         emit({ type: 'error', message: request.signal.aborted ? 'Request stopped.' : 'The AI request was interrupted. No changes were applied.' });
-      } finally { controller.close(); }
+      } finally { try { controller.close(); } catch { /* Reader already cancelled. */ } }
     },
+    cancel() { cancellation.abort(); },
   });
   const upstream = await ready;
   const headers = getLovableAiGatewayResponseHeaders(upstream.headers, { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store' });
