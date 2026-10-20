@@ -13,17 +13,19 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const abort = useRef<AbortController | null>(null);
+  const dialog = useRef<HTMLElement | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
   const context = prepareValidationContext(result, profile);
   const signature = JSON.stringify(result);
   useEffect(() => {
-    abort.current?.abort(); setText(''); setReasoning(''); setError(''); setConfirmed(false); setLoading(false); setOpen(false);
-    return () => { abort.current?.abort(); };
+    abort.current?.abort(); abort.current = null; setText(''); setReasoning(''); setError(''); setConfirmed(false); setCopied(false); setLoading(false); setOpen(false);
+    return () => { abort.current?.abort(); abort.current = null; };
   }, [signature, profile]);
 
   async function explain() {
     if (!confirmed || loading) return;
     const controller = new AbortController(); abort.current = controller;
-    setLoading(true); setText(''); setReasoning(''); setError('');
+    setLoading(true); setText(''); setReasoning(''); setError(''); setCopied(false);
     try {
       const response = await fetch('/api/validation-explanation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(context), signal: controller.signal });
       if (!response.ok) {
@@ -54,12 +56,20 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
   }
 
   return <>
-    <PanelButton disabled={!context.failures.length} onClick={() => setOpen(true)} title="Explain validation findings with AI"><Sparkles size={14} /> Explain with AI</PanelButton>
-    {open && <div className="fixed inset-0 z-50 bg-panel-text/30 flex items-center justify-center p-4" onKeyDown={event => { if (event.key === 'Escape') { abort.current?.abort(); setOpen(false); } }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="ai-validation-title" className="bg-panel-surface text-panel-text border border-panel-border rounded-lg w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl">
+    <PanelButton ref={trigger} disabled={!context.failures.length} onClick={() => setOpen(true)} title="Explain validation findings with AI"><Sparkles size={14} /> Explain with AI</PanelButton>
+    {open && <div className="fixed inset-0 z-50 bg-panel-text/30 flex items-center justify-center p-4" onKeyDown={event => {
+      if (event.key === 'Escape') { abort.current?.abort(); setOpen(false); trigger.current?.focus(); }
+      if (event.key === 'Tab') {
+        const controls = Array.from(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), summary') || []).filter(el => el.getClientRects().length > 0);
+        const first = controls[0]; const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    }}>
+      <section ref={dialog} role="dialog" aria-modal="true" aria-labelledby="ai-validation-title" className="bg-panel-surface text-panel-text border border-panel-border rounded-lg w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl min-w-0">
         <header className="flex items-center justify-between gap-3 p-4 border-b border-panel-border">
           <h2 id="ai-validation-title" className="font-semibold flex items-center gap-2"><Sparkles size={18} /> Validation explanation</h2>
-          <PanelButton iconOnly autoFocus aria-label="Close validation explanation" onClick={() => { abort.current?.abort(); setOpen(false); }}><X size={16} /></PanelButton>
+          <PanelButton iconOnly autoFocus aria-label="Close validation explanation" onClick={() => { abort.current?.abort(); setOpen(false); trigger.current?.focus(); }}><X size={16} /></PanelButton>
         </header>
         <div className="overflow-y-auto p-4 space-y-4 text-sm">
           <p className="text-panel-muted">AI advice is optional. Processing your HL7 message remains on your device. No changes are applied automatically.</p>
@@ -73,7 +83,7 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
           {reasoning && <details><summary className="cursor-pointer text-panel-muted">Model reasoning summary</summary><p className="mt-2 whitespace-pre-wrap text-panel-muted">{reasoning}</p></details>}
           {loading && <p role="status" className="text-panel-accent">{text ? 'Writing recommendations...' : 'Reviewing validation findings...'}</p>}
           {error && <p role="alert" className="text-panel-danger">{error}</p>}
-          {text && <div className="whitespace-pre-wrap leading-relaxed" aria-live="polite">{text}</div>}
+          {text && <div className="whitespace-pre-wrap leading-relaxed break-words" aria-live="polite">{text}</div>}
           <p className="text-xs text-panel-muted">These findings come from a limited workbench rule set, not the official FHIR validator. Confirm the exact implementation guide and review all recommendations before changing clinical data.</p>
         </div>
         <footer className="flex flex-wrap justify-end gap-2 p-4 border-t border-panel-border">
