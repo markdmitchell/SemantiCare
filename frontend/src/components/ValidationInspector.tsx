@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AIValidationAssistant } from './AIValidationAssistant';
 import type { ValidationResult } from '../types/hl7';
 import {
   CheckCircle2,
@@ -64,6 +65,7 @@ export const ValidationInspector: React.FC<ValidationInspectorProps> = ({
 
         {/* Profile Switcher & Refresh Button */}
         <div className="flex items-center gap-2 self-start sm:self-auto text-xs">
+          <AIValidationAssistant result={validationResult} profile={selectedProfile} />
           <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
             <button
               onClick={() => onProfileChange('us-core')}
