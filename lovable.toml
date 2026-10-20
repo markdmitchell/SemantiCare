@@ -1,5 +1,5 @@
 [run]
-install = "npm --prefix frontend install --include=dev"
-dev = "npm --prefix frontend run dev -- --port 8080 --host 0.0.0.0"
-build = "node scripts/build.mjs"
-"build:dev" = "node scripts/build.mjs"
+install = "bun install"
+dev = "bun run dev"
+build = "bun run build"
+"build:dev" = "bun run build:dev"
