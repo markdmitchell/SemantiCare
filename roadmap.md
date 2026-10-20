@@ -3,3 +3,6 @@
 - [x] Verify both headers and their actions in the browser.
 - [x] Consolidate the Navbar with a compact scenario selector and overflow tools menu.
 - [x] Verify navigation, sample selection, and all retained tools in the browser.
+- [x] Add secure streamed AI explanations for validation failures with confirmation and actionable fixes.
+- [x] Preserve browser message processing while enabling the app's secure AI service.
+- [x] Test privacy filtering, cancellation, errors, and the live validation explanation flow.
