@@ -22,6 +22,14 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
     abort.current?.abort(); abort.current = null; setText(''); setReasoning(''); setError(''); setConfirmed(false); setCopied(false); setLoading(false); setOpen(false);
     return () => { abort.current?.abort(); abort.current = null; };
   }, [signature, profile]);
+  useEffect(() => {
+    if (!open) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { abort.current?.abort(); setOpen(false); trigger.current?.focus(); }
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [open]);
 
   async function explain() {
     if (!confirmed || loading) return;
