@@ -12,6 +12,7 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
   const [reasoning, setReasoning] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const abort = useRef<AbortController | null>(null);
   const dialog = useRef<HTMLElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -30,6 +31,7 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
       const response = await fetch('/api/validation-explanation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(context), signal: controller.signal });
       if (!response.ok) {
         const body = await response.json().catch(() => ({ error: 'AI service is unavailable.' }));
+        if (response.status === 402 || response.status === 403 || response.status === 404) setBlocked(true);
         throw new Error(body.error || 'AI service is unavailable.');
       }
       const reader = response.body?.getReader();
@@ -88,7 +90,7 @@ export function AIValidationAssistant({ result, profile }: { result: ValidationR
         </div>
         <footer className="flex flex-wrap justify-end gap-2 p-4 border-t border-panel-border">
           {text && <PanelButton onClick={async () => { try { await navigator.clipboard.writeText(text); setCopied(true); } catch { setError('Could not copy the explanation.'); } }}><Copy size={14} />{copied ? 'Copied' : 'Copy explanation'}</PanelButton>}
-          {loading ? <PanelButton onClick={() => abort.current?.abort()}><Square size={14} />Stop</PanelButton> : <PanelButton disabled={!confirmed || !context.failures.length} onClick={explain}><Sparkles size={14} />{text ? 'Request new explanation' : 'Generate explanation'}</PanelButton>}
+          {loading ? <PanelButton onClick={() => abort.current?.abort()}><Square size={14} />Stop</PanelButton> : <PanelButton disabled={blocked || !confirmed || !context.failures.length} onClick={explain}><Sparkles size={14} />{text ? 'Request new explanation' : 'Generate explanation'}</PanelButton>}
         </footer>
       </section>
     </div>}
