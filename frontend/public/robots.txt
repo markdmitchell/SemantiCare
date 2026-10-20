@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://semanticare.health/sitemap.xml
