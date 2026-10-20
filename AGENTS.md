@@ -5,5 +5,6 @@
 - Keep navigation in one desktop bar with a native scenario selector and an overflow tools menu; wrap views on narrow screens to avoid crowding without hiding actions.
 - Host the preserved frontend workbench through root TanStack Start routes so secure streaming AI endpoints deploy with the app; keep deterministic HL7 processing in the browser.
 - Both root build scripts explicitly load `./vite.config.ts` with `--config` and use `--app`; keep the default working-directory root so publishing loads TanStack's client/server builder instead of a legacy HTML entry.
+- Keep the root `vite` major version within the installed `@tanstack/react-start` peer range (currently Vite 8); an older Vite ignores TanStack's client entry and the build falls back to a missing `index.html`.
 - AI validation input uses a closed vocabulary of structural failures, never raw HL7, bundles, values, diagnostic text or patient identifiers, because scrubbed and edited bundles may retain PHI.
 - Persist terminal AI access failures in server-only ai_service_state; do not retry or clear denied access without owner recovery.
