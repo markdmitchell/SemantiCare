@@ -6,8 +6,8 @@
   "scripts": {
     "install:frontend": "npm --prefix frontend install --include=dev --no-audit --no-fund",
     "dev": "vite --port 8080 --host 0.0.0.0",
-    "build": "vite build",
-    "build:dev": "vite build --mode development"
+    "build": "vite build --app",
+    "build:dev": "vite build --app --mode development"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3",
