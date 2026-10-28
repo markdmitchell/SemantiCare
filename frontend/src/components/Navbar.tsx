@@ -111,7 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="navbar-shell sticky top-0 z-30">
       <div className="navbar-row max-w-7xl mx-auto">
         <div className="navbar-brand flex items-center gap-2.5 min-w-0">
-          <img src="/favicon.svg" alt="" aria-hidden="true" className="w-8 h-8 shrink-0" />
+          <img src="/favicon.png" alt="" aria-hidden="true" className="w-8 h-8 shrink-0" />
           <div>
             <div className="font-semibold text-panel-text leading-tight">SemantiCare</div>
             <div className="text-[10px] text-panel-muted leading-tight">HL7 v2 → FHIR R4</div>
