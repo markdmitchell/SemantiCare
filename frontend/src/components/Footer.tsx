@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Row 1: Brand & Mission */}
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
-            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-6 h-6 shrink-0 rounded-lg shadow-sm" />
+            <img src="/favicon.png" alt="" aria-hidden="true" className="w-6 h-6 shrink-0 rounded-lg shadow-sm" />
             <span className="font-bold text-slate-900 text-sm tracking-tight">SemantiCare</span>
             <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
               v1.1 Active
