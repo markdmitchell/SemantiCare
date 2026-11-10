@@ -525,8 +525,13 @@ export const App: React.FC = () => {
               onDirectJsonEdit={handleDirectJsonEdit}
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-white border border-slate-200 rounded-xl text-slate-500 text-xs">
-              Click "Map to FHIR R4" to initiate semantic mapping.
+            <div className="flex flex-col items-center justify-center h-full bg-white border border-slate-200 rounded-xl text-center p-6">
+              <img src="/favicon.png" alt="" aria-hidden="true" className="empty-state-mark w-40 h-40 mb-5 select-none pointer-events-none" draggable={false} />
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">FHIR R4 bundle will appear here</h3>
+              <p className="text-xs text-slate-500 max-w-xs leading-relaxed mb-4">Load a scenario or paste a message, then click Process Clinical Message.</p>
+              <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                <span>Paste HL7 v2</span><span aria-hidden="true">→</span><span>Protect PHI</span><span aria-hidden="true">→</span><span>Review FHIR R4</span>
+              </div>
             </div>
           )}
         </section>
