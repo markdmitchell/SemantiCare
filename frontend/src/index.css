@@ -87,3 +87,7 @@
   .navbar-tab { gap: 4px; padding: 0 4px; font-size: 11px; }
   .navbar-tab svg { display: none; }
 }
+
+.empty-state-mark { opacity: 0.12; filter: saturate(0.6); animation: empty-state-breathe 4s ease-in-out infinite; }
+@keyframes empty-state-breathe { 0%, 100% { transform: scale(1); opacity: 0.12; } 50% { transform: scale(1.04); opacity: 0.16; } }
+@media (prefers-reduced-motion: reduce) { .empty-state-mark { animation: none; } }
