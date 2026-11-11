@@ -115,6 +115,8 @@ export const Footer: React.FC<FooterProps> = ({
           </a>
         </div>
 
+        <div id="mark-connect"></div>
+
         {/* Row 3: Bottom Disclaimer & Regulatory Notes */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-slate-500 pt-5 border-t border-slate-200">
           <div className="flex flex-wrap items-center gap-3">
