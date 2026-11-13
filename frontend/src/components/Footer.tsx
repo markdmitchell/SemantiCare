@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Activity,
   BookOpen,
@@ -9,8 +9,10 @@ import {
   ExternalLink,
   Cpu,
   Lock,
+  AlertTriangle,
 } from 'lucide-react';
 import type { FooterTab } from './FooterPagesModal';
+import { contactButtonsRendered, startContactMonitor, type ContactStatus } from './contactMonitor';
 
 interface FooterProps {
   onOpenFooterModal: (tab: FooterTab) => void;
@@ -23,6 +25,12 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenUserGuide,
   onOpenRoadmap,
 }) => {
+  const [contactStatus, setContactStatus] = useState<ContactStatus>('pending');
+  useEffect(() => startContactMonitor({
+    isRendered: () => contactButtonsRendered(document.getElementById('mark-connect')),
+    onStatus: setContactStatus,
+  }), []);
+
   return (
     <footer className="border-t border-slate-200/80 bg-slate-50 text-slate-500 text-xs py-8 px-6 mt-auto">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -116,6 +124,12 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         <div id="mark-connect"></div>
+        {contactStatus === 'failed' && (
+          <p role="alert" className="flex items-start gap-2 text-panel-warning text-xs leading-relaxed">
+            <AlertTriangle aria-hidden="true" className="w-4 h-4 shrink-0" />
+            Contact buttons are unavailable. The shared contact script may be blocked or unable to load. Check your browser’s blocking settings, then refresh.
+          </p>
+        )}
 
         {/* Row 3: Bottom Disclaimer & Regulatory Notes */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-slate-500 pt-5 border-t border-slate-200">
