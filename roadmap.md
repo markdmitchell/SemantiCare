@@ -7,4 +7,4 @@
 - [x] Preserve browser message processing while enabling the app's secure AI service.
 - [x] Test privacy filtering, cancellation, errors, and the live validation explanation flow.
 - [x] Add a lightweight footer warning for blocked or unrendered shared contact buttons.
-- [ ] Verify healthy rendering, blocked script, missing buttons, and recovery.
+- [x] Verify healthy rendering, blocked script, missing buttons, and recovery.

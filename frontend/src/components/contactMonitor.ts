@@ -15,7 +15,7 @@ export function contactButtonsRendered(host: HTMLElement | null): boolean {
     while (current) {
       const style = getComputedStyle(current);
       if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || Number(style.opacity) === 0) return false;
-      const parent = current.parentElement;
+      const parent: HTMLElement | null = current.parentElement;
       const tree = current.getRootNode();
       current = parent ?? (tree instanceof ShadowRoot ? tree.host as HTMLElement : null);
     }
