@@ -8,3 +8,4 @@
 - Keep the root `vite` major version within the installed `@tanstack/react-start` peer range (currently Vite 8); an older Vite ignores TanStack's client entry and the build falls back to a missing `index.html`.
 - AI validation input uses a closed vocabulary of structural failures, never raw HL7, bundles, values, diagnostic text or patient identifiers, because scrubbed and edited bundles may retain PHI.
 - Persist terminal AI access failures in server-only ai_service_state; do not retry or clear denied access without owner recovery.- Static public assets (favicon, robots.txt, sitemap.xml) live in root `public/`; the TanStack/Nitro build only copies that folder into `dist/client`.
+- Keep contact health monitoring browser-only and scoped to the shared widget, with a render grace period and recovery checks, so failures are visible without transmitting clinical data or duplicating the remote script.
